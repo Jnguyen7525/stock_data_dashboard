@@ -1,0 +1,13 @@
+[
+  { "name": "Simple Moving Average", "type": "trend" },
+  { "name": "Exponential Moving Average", "type": "trend" },
+  { "name": "Weighted Moving Average", "type": "trend" },
+
+  { "name": "RSI", "type": "momentum" },
+  { "name": "MACD", "type": "momentum" },
+
+  { "name": "Bollinger Bands", "type": "volatility" },
+
+  { "name": "OBV", "type": "volume" },
+  { "name": "VWAP", "type": "volume" }
+]

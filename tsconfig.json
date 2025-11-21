@@ -28,7 +28,12 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "**/*.mts",
+    "scripts/convertTickers.js",
+    "scripts/generateAlpacaTickers.js",
+    "scripts/convert-model.js",
+    "app/ml-pipeline/supervisedTrainer.ts",
+    "global.d.ts" // ✅ add this if you put it at root
   ],
   "exclude": ["node_modules"]
 }

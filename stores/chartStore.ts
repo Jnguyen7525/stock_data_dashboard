@@ -27,11 +27,17 @@ interface ChartState {
   updateChartSeries: (ticker: string, point: ChartPoint) => void;
   setChartSeries: (ticker: string, points: ChartPoint[]) => void;
   resetChartData: (ticker: string) => void;
+  sidebarOpen: boolean;
+  openSidebar: () => void;
+  closeSidebar: () => void;
+  toggleSidebar: () => void;
+  showTrends: boolean;
+  setShowTrends: () => void;
 }
 
 export const useChartStore = create<ChartState>((set) => ({
   chartType: "candlestick",
-  ticker: "SPY",
+  ticker: "",
   timeframe: "1D",
   data: {},
   setChartType: (type) => set({ chartType: type }),
@@ -62,4 +68,10 @@ export const useChartStore = create<ChartState>((set) => ({
         [ticker]: [],
       },
     })),
+  sidebarOpen: false,
+  openSidebar: () => set({ sidebarOpen: true }),
+  closeSidebar: () => set({ sidebarOpen: false }),
+  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+  showTrends: false,
+  setShowTrends: () => set((state) => ({ showTrends: !state.showTrends })),
 }));

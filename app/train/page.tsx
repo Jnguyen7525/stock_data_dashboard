@@ -125,7 +125,6 @@ export default function TrainPage() {
       <Header />
       <div className="flex flex-col w-full h-full items-start justify-start p-6 gap-8 overflow-x-hidden">
         <h1 className="text-3xl font-bold">Training</h1>
-        {/* <UploadForm onUpload={setRows} /> */}
 
         {/* Step 2: Clustering */}
         {/* Step: Unsupervised / Hybrid */}
@@ -199,7 +198,6 @@ export default function TrainPage() {
                     Train Hybrid by Cluster (k={res.k})
                   </button>
 
-                  {/* Results under train button */}
                   {/* Results under train button */}
                   {trainOutput && trainOutput.k === res.k && (
                     <div className="mt-4">

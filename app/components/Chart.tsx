@@ -43,7 +43,8 @@ export default function Chart({ width, height }: Props) {
   const overlayRefs = useRef<Record<string, any>>({});
   const volumeSeriesRef = useRef<any>(null);
 
-  const { chartType, ticker, setChartSeries, timeframe } = useChartStore();
+  const { chartType, ticker, setChartSeries, timeframe, showTrends } =
+    useChartStore();
   const { selectedIndicators } = useIndicatorStore();
 
   const [isChartReady, setChartReady] = useState(false);
@@ -51,7 +52,6 @@ export default function Chart({ width, height }: Props) {
   const [model, setModel] = useState<tf.LayersModel | null>(null);
   const [scaler, setScaler] = useState<StandardScaler | null>(null);
   const [labels, setLabels] = useState<string[]>([]);
-  const [showMLOverlay, setShowMLOverlay] = useState<boolean>(false);
 
   useEffect(() => {
     async function loadModelFromPublic() {
@@ -118,6 +118,14 @@ export default function Chart({ width, height }: Props) {
     setChartReady(true);
   }, [width, height]);
 
+  // Effect for resizing chart on window resize
+  // 🔄 Resize chart when props change
+  useEffect(() => {
+    if (chartRef.current && width > 0 && height > 0) {
+      chartRef.current.resize(width, height);
+    }
+  }, [width, height]);
+
   // 📈 Series + overlay update
   useEffect(() => {
     const chart = chartRef.current;
@@ -128,9 +136,18 @@ export default function Chart({ width, height }: Props) {
       chart.removeSeries(seriesRef.current);
       seriesRef.current = null;
     }
-    Object.values(overlayRefs.current).forEach((overlay) =>
-      chart.removeSeries(overlay)
-    );
+    // Remove any line/candle series overlays
+    Object.values(overlayRefs.current).forEach((overlay) => {
+      // only remove if it's a series
+      if (overlay && typeof overlay.setData === "function") {
+        chart.removeSeries(overlay);
+      }
+      // if it's a marker plugin, detach instead
+      if (overlay && typeof overlay.setMarkers === "function") {
+        overlay.setMarkers([]); // clear markers
+        overlay.detach(); // optional: fully detach
+      }
+    });
 
     overlayRefs.current = {};
     if (volumeSeriesRef.current) {
@@ -341,37 +358,15 @@ export default function Chart({ width, height }: Props) {
         });
 
         // 📍 ML Prediction Overlay
-
-        // Guard: skip if model/scaler not ready
-        if (!model || !scaler) {
-          console.warn(
-            "⚠️ Model or scaler not loaded yet, skipping ML overlay"
-          );
-          return;
-        }
-
-        // If overlay is disabled, remove any existing ML markers/series and exit early
-        if (!showMLOverlay) {
-          console.log("ℹ️ showMLOverlay is false, clearing ML overlay");
-
-          // remove any ML dashed line series we added earlier
-          Object.keys(overlayRefs.current).forEach((key) => {
-            if (key.startsWith("ML Dashed")) {
-              overlayRefs.current[key].remove();
-              delete overlayRefs.current[key];
-            }
-          });
-
-          // clear markers from the series
-          // Clear markers from the main series
-          if (seriesRef.current) {
-            // if you have a helper:
-            createSeriesMarkers(seriesRef.current, []);
-            // or directly:
-            (seriesRef.current as any).setMarkers?.([]);
+        // If trends are disabled, clear any existing markers + overlays
+        if (!showTrends || !model || !scaler) {
+          // clear markers plugin if we created one earlier
+          const markerPrimitive = overlayRefs.current["MLMarkers"];
+          if (markerPrimitive) {
+            markerPrimitive.setMarkers([]); // remove all markers
+            delete overlayRefs.current["MLMarkers"];
           }
 
-          // then just skip ML overlay logic, but DO NOT stop the rest of chart rendering
           return;
         }
 
@@ -394,14 +389,14 @@ export default function Chart({ width, height }: Props) {
         const emaSeries = computeEMA(closeSeriesML, 14);
         const bbSeries = computeBollingerBands(closeSeriesML, 20, 2);
         const vwapSeries = computeVWAP(
-          dataML.map((d: { time: string; close: number; volume: number }) => ({
+          dataML.map((d: any) => ({
             time: d.time,
             value: d.close,
             volume: d.volume,
           }))
         );
         const obvSeries = computeOBV(
-          dataML.map((d: { time: string; close: number; volume: number }) => ({
+          dataML.map((d: any) => ({
             time: d.time,
             value: d.close,
             volume: d.volume,
@@ -411,56 +406,37 @@ export default function Chart({ width, height }: Props) {
         const idx = <T extends { time: number }>(arr: T[]) =>
           arr.reduce((m, x) => (m.set(x.time, x), m), new Map<number, T>());
 
-        const rsiMap = idx(
-          rsiSeries as unknown as { time: number; value: number }[]
-        );
-        const emaMap = idx(
-          emaSeries as unknown as { time: number; value: number }[]
-        );
+        const rsiMap = idx(rsiSeries as { time: number; value: number }[]);
+        const emaMap = idx(emaSeries as { time: number; value: number }[]);
         const bbMap = idx(
           bbSeries as unknown as { time: number; value: number }[]
         );
-        const vwapMap = idx(
-          vwapSeries as unknown as { time: number; value: number }[]
-        );
-        const obvMap = idx(
-          obvSeries as unknown as { time: number; value: number }[]
-        );
+        const vwapMap = idx(vwapSeries as { time: number; value: number }[]);
+        const obvMap = idx(obvSeries as { time: number; value: number }[]);
 
-        const enrichedBars: RawRow[] = dataML.map(
-          (d: {
-            ticker: string;
-            time: number;
-            open: number;
-            high: number;
-            low: number;
-            close: number;
-            volume: number;
-          }) => {
-            const bb: { upper: number; middle: number; lower: number } =
-              bbMap.get(d.time) as unknown as {
-                upper: number;
-                middle: number;
-                lower: number;
-              };
-            return {
-              ticker,
-              time: new Date(d.time * 1000).toISOString(),
-              open: d.open,
-              high: d.high,
-              low: d.low,
-              close: d.close,
-              volume: d.volume,
-              ema: emaMap.get(d.time)?.value ?? null,
-              rsi: rsiMap.get(d.time)?.value ?? null,
-              obv: obvMap.get(d.time)?.value ?? null,
-              vwap: vwapMap.get(d.time)?.value ?? null,
-              bb_upper: bb?.upper ?? null,
-              bb_middle: bb?.middle ?? null,
-              bb_lower: bb?.lower ?? null,
-            };
-          }
-        );
+        const enrichedBars: RawRow[] = dataML.map((d: any) => {
+          const bb = bbMap.get(d.time) as unknown as {
+            upper: number;
+            middle: number;
+            lower: number;
+          };
+          return {
+            ticker,
+            time: new Date(d.time * 1000).toISOString(),
+            open: d.open,
+            high: d.high,
+            low: d.low,
+            close: d.close,
+            volume: d.volume,
+            ema: emaMap.get(d.time)?.value ?? null,
+            rsi: rsiMap.get(d.time)?.value ?? null,
+            obv: obvMap.get(d.time)?.value ?? null,
+            vwap: vwapMap.get(d.time)?.value ?? null,
+            bb_upper: bb?.upper ?? null,
+            bb_middle: bb?.middle ?? null,
+            bb_lower: bb?.lower ?? null,
+          };
+        });
 
         // 3️⃣ Run episode‑level predictions
         const episodes = await getEpisodePredictions(
@@ -524,7 +500,16 @@ export default function Chart({ width, height }: Props) {
           });
         });
 
-        createSeriesMarkers(seriesRef.current, markers);
+        // ✅ Create markers and store plugin reference
+        if (showTrends) {
+          const markerPrimitive = createSeriesMarkers(
+            seriesRef.current,
+            markers
+          );
+          overlayRefs.current["MLMarkers"] = markerPrimitive;
+        } else {
+          return;
+        }
       } catch (err) {
         console.error("[Fetch] Failed to fetch chart data:", err);
       }
@@ -537,36 +522,12 @@ export default function Chart({ width, height }: Props) {
     isChartReady,
     selectedIndicators,
     timeframe,
-    model,
-    scaler,
-    showMLOverlay,
+    showTrends,
   ]);
-
-  // Effect for resizing chart on window resize
-  useEffect(() => {
-    const handleResize = () => {
-      if (chartRef.current && chartContainerRef.current) {
-        chartRef.current.resize(
-          chartContainerRef.current.clientWidth,
-          chartContainerRef.current.clientHeight
-        );
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-
-    // Run once on mount to size correctly
-    handleResize();
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
 
   return (
     <div>
-      <button onClick={() => setShowMLOverlay(!showMLOverlay)}>showML</button>
-      <div ref={chartContainerRef} className="w-full h-full" />
+      <div ref={chartContainerRef} className="w-full h-full z-10" />
     </div>
   );
 }

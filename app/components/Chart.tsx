@@ -51,6 +51,7 @@ export default function Chart({ width, height }: Props) {
   const [model, setModel] = useState<tf.LayersModel | null>(null);
   const [scaler, setScaler] = useState<StandardScaler | null>(null);
   const [labels, setLabels] = useState<string[]>([]);
+  const [showMLOverlay, setShowMLOverlay] = useState<boolean>(false);
 
   useEffect(() => {
     async function loadModelFromPublic() {
@@ -349,6 +350,31 @@ export default function Chart({ width, height }: Props) {
           return;
         }
 
+        // If overlay is disabled, remove any existing ML markers/series and exit early
+        if (!showMLOverlay) {
+          console.log("ℹ️ showMLOverlay is false, clearing ML overlay");
+
+          // remove any ML dashed line series we added earlier
+          Object.keys(overlayRefs.current).forEach((key) => {
+            if (key.startsWith("ML Dashed")) {
+              overlayRefs.current[key].remove();
+              delete overlayRefs.current[key];
+            }
+          });
+
+          // clear markers from the series
+          // Clear markers from the main series
+          if (seriesRef.current) {
+            // if you have a helper:
+            createSeriesMarkers(seriesRef.current, []);
+            // or directly:
+            (seriesRef.current as any).setMarkers?.([]);
+          }
+
+          // then just skip ML overlay logic, but DO NOT stop the rest of chart rendering
+          return;
+        }
+
         // 1️⃣ Prepare base OHLCV series
         const offsetML = new Date().getTimezoneOffset() * 60;
         const dataML = raw
@@ -513,6 +539,7 @@ export default function Chart({ width, height }: Props) {
     timeframe,
     model,
     scaler,
+    showMLOverlay,
   ]);
 
   // Effect for resizing chart on window resize
@@ -536,5 +563,10 @@ export default function Chart({ width, height }: Props) {
     };
   }, []);
 
-  return <div ref={chartContainerRef} className="w-full h-full" />;
+  return (
+    <div>
+      <button onClick={() => setShowMLOverlay(!showMLOverlay)}>showML</button>
+      <div ref={chartContainerRef} className="w-full h-full" />
+    </div>
+  );
 }

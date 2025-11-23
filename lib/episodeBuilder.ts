@@ -124,7 +124,7 @@ function lrSlopeAndR2(values: number[]): { slope: number; r2: number } {
 // -------------------------------------------------------------
 export function buildEpisodes(
   rows: RawRow[],
-  reversalThresholdPct = 0.05
+  reversalThresholdPct = 0.01
 ): Episode[] {
   const episodes: Episode[] = [];
   if (rows.length === 0) return episodes;

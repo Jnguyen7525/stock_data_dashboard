@@ -160,7 +160,12 @@ export default function Chart({ width, height }: Props) {
       seriesRef.current =
         chartType === "line"
           ? chart.addSeries(LineSeries, { color: "#83ffe6" })
-          : chart.addSeries(CandlestickSeries);
+          : chart.addSeries(CandlestickSeries, {
+              wickUpColor: "#83ffe6",
+              upColor: "#83ffe6",
+              wickDownColor: "#ff5f5f",
+              downColor: "#ff5f5f",
+            });
       seriesTypeRef.current = chartType;
     }
 
@@ -447,6 +452,16 @@ export default function Chart({ width, height }: Props) {
         );
         console.log("🔎 Episode predictions:", episodes.slice(0, 2));
 
+        // 🔎 Filter by confidence threshold
+        const confidenceThreshold = 0.7; // tune this (0.6–0.8 is common)
+        const filteredEpisodes = episodes.filter(
+          (ep) => ep.confidence >= confidenceThreshold
+        );
+
+        console.log(
+          `✅ Using ${filteredEpisodes.length}/${episodes.length} episodes above confidence=${confidenceThreshold}`
+        );
+
         // 4️⃣ Overlay markers + dashed lines
         const markers: any[] = [];
         const regimeColorMap: Record<string, string> = {
@@ -455,7 +470,7 @@ export default function Chart({ width, height }: Props) {
           Flat: "#999999",
         };
 
-        episodes.forEach((ep, idx) => {
+        filteredEpisodes.forEach((ep, idx) => {
           const labelStr = ep.label;
           const regimeColor = regimeColorMap[labelStr] ?? "#888888";
 

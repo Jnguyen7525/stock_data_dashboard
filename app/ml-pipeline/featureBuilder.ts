@@ -203,7 +203,24 @@ export class StandardScaler {
   }
 
   transform(X: tf.Tensor2D): tf.Tensor2D {
-    if (!this.means || !this.stds) throw new Error("Scaler not fitted");
+    // if (!this.means || !this.stds) throw new Error("Scaler not fitted");
+    if (!this.means || !this.stds) {
+      throw new Error("Scaler not fitted");
+    }
+
+    // Guard: empty input
+    if (X.shape[0] === 0 || X.shape[1] === 0) {
+      console.warn("[StandardScaler] Empty input tensor, skipping transform");
+      return X;
+    }
+
+    // Guard: feature mismatch
+    if (X.shape[1] !== this.means.length) {
+      throw new Error(
+        `[StandardScaler] Feature mismatch: expected ${this.means.length}, got ${X.shape[1]}`
+      );
+    }
+
     const meansT = tf.tensor1d(Array.from(this.means));
     const stdsT = tf.tensor1d(Array.from(this.stds));
     const Xc = tf.sub(X, meansT);
@@ -238,6 +255,13 @@ export function buildFeatureTensor(
   console.log(
     `[buildFeatureTensor] Building tensor for ${rows.length} episodes`
   );
+  if (rows.length === 0) {
+    console.warn(
+      "[buildFeatureTensor] No rows provided, returning empty tensor"
+    );
+    return tf.tensor2d([], [0, FEATURES.length], "float32");
+  }
+
   const vectors = rows.map((row) => rowToFeatureVector(row, strategy));
   const d = vectors[0]?.length || 0;
   const flat = new Float32Array(rows.length * d);

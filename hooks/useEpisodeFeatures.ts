@@ -4,6 +4,7 @@ import {
   EpisodeRow,
 } from "@/app/ml-pipeline/featureBuilder";
 import { buildEpisodes, RawRow } from "@/lib/episodeBuilder";
+import { Timeframe, useChartStore } from "@/stores/chartStore";
 import * as tf from "@tensorflow/tfjs";
 
 export type EpisodePrediction = {
@@ -11,6 +12,23 @@ export type EpisodePrediction = {
   label: string;
   confidence: number;
 };
+
+function getThresholdForTimeframe(tf: Timeframe): number {
+  switch (tf) {
+    case "1Min":
+    case "5Min":
+      return 0.001; // 0.1%
+    case "15Min":
+    case "30Min":
+      return 0.002; // 0.2%
+    case "1H":
+    case "4H":
+      return 0.005; // 0.5%
+    case "1D":
+    default:
+      return 0.02; // 2%
+  }
+}
 
 export async function getEpisodePredictions(
   enrichedBars: RawRow[],
@@ -23,12 +41,20 @@ export async function getEpisodePredictions(
     return [];
   }
 
+  // inside getEpisodePredictions
+  const { timeframe } = useChartStore.getState();
+  const threshold = getThresholdForTimeframe(timeframe);
+
   console.log("📍 Starting supervised inference...");
 
   // 1️⃣ Aggregate bars into episodes
+  // const episodes: EpisodeRow[] = buildEpisodes(
+  //   enrichedBars,
+  //   0.05
+  // ) as unknown as EpisodeRow[];
   const episodes: EpisodeRow[] = buildEpisodes(
     enrichedBars,
-    0.05
+    threshold
   ) as unknown as EpisodeRow[];
 
   console.log(`🔎 Built ${episodes.length} episodes`);

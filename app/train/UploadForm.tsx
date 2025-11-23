@@ -31,7 +31,6 @@ export default function UploadForm({
   return (
     <div className="">
       {/* File input */}
-      {/* File input styled like training step */}
       <input
         type="file"
         multiple

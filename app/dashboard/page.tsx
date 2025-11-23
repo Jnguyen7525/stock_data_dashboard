@@ -31,20 +31,9 @@ export default function Dashboard() {
     <main className="bg-[#2c2c2c] text-white max-w-[100vw] w-screen min-h-screen max-h-screen h-auto flex flex-col relative  ">
       <Header />
 
-      {/* chart top bar */}
-      {/* <ChartToolbar />
-      <SelectedIndicators /> */}
-
-      {/* <div
-        ref={containerRef}
-        className="flex-1 p-6 flex w-full h-full overflow-auto"
-      >
-        <Chart width={size.width} height={size.height} />
-      </div> */}
       {/* Main content area */}
       <div className="flex flex-1 min-h-0 max-w-[100vw] relative overflow-hidden">
         {/* Chart area (70%) */}
-
         <div
           className={`z-0 ${
             sidebarOpen

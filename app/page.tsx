@@ -150,19 +150,19 @@ function Footer() {
       <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
         {/* Left side: identity */}
         <div className="mb-4 md:mb-0">
-          <h2 className="text-white font-semibold text-lg">Market Dashboard</h2>
+          <h2 className="text-white font-semibold text-lg">Market Talk</h2>
           <p className="text-sm">Charts & News Showcase App</p>
         </div>
 
         {/* Center: nav links */}
         <nav className="flex space-x-6 text-sm">
-          <a href="/" className="hover:text-white">
+          <a href="/dashboard" className="hover:text-white">
             Dashboard
           </a>
           <a href="/news" className="hover:text-white">
             News
           </a>
-          <a href="#" className="hover:text-white">
+          <a href="/" className="hover:text-white">
             About
           </a>
         </nav>

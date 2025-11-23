@@ -126,31 +126,30 @@ export default function ChartToolbar() {
 
         {/* Timeframe Dropdown Trigger */}
         <div className="relative flex items-center gap-2 p-2 rounded group cursor-pointer">
-          <span className="text-sm text-white group-hover:opacity-50">
-            {timeframe}
-          </span>
-          <button
+          <div
+            className="flex gap-2 items-center group-hover:opacity-50"
             onClick={() => toggleDropdown("timeframe")}
-            className=" cursor-pointer group-hover:opacity-50"
           >
+            <span className="text-sm text-white group-hover:opacity-50 cursor-pointer">
+              {timeframe}
+            </span>
+
             <Clock className="w-5 h-5 text-white" />
-          </button>
+          </div>
           {openDropdown === "timeframe" && (
             <ul className="absolute top-full left-0 mt-2 bg-[#2c2c2c] text-white rounded shadow z-50 w-28">
-              {["1Min", "5Min", "15Min", "30Min", "1H", "4H", "1D"].map(
-                (tf) => (
-                  <li
-                    key={tf}
-                    className="px-3 py-2 hover:opacity-50  cursor-pointer"
-                    onClick={() => {
-                      setTimeframe(tf as Timeframe);
-                      setOpenDropdown(null);
-                    }}
-                  >
-                    {tf}
-                  </li>
-                )
-              )}
+              {["1Min", "5Min", "15Min", "30Min", "1H", "1D"].map((tf) => (
+                <li
+                  key={tf}
+                  className="px-3 py-2 hover:opacity-50  cursor-pointer"
+                  onClick={() => {
+                    setTimeframe(tf as Timeframe);
+                    setOpenDropdown(null);
+                  }}
+                >
+                  {tf}
+                </li>
+              ))}
             </ul>
           )}
         </div>

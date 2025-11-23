@@ -48,10 +48,6 @@ export async function getEpisodePredictions(
   console.log("📍 Starting supervised inference...");
 
   // 1️⃣ Aggregate bars into episodes
-  // const episodes: EpisodeRow[] = buildEpisodes(
-  //   enrichedBars,
-  //   0.05
-  // ) as unknown as EpisodeRow[];
   const episodes: EpisodeRow[] = buildEpisodes(
     enrichedBars,
     threshold

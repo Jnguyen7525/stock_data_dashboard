@@ -7,14 +7,7 @@ interface ChartPoint {
   value: number;
 }
 
-export type Timeframe =
-  | "1Min"
-  | "5Min"
-  | "15Min"
-  | "30Min"
-  | "1H"
-  | "4H"
-  | "1D";
+export type Timeframe = "1Min" | "5Min" | "15Min" | "30Min" | "1H" | "1D";
 
 interface ChartState {
   chartType: ChartType;

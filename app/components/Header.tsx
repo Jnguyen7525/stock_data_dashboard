@@ -96,7 +96,7 @@ function Header() {
             onMouseDown={() => handleSelect(input)}
           />
           {showDropdown && filtered.length > 0 && (
-            <ul className="absolute top-full left-0 right-0 bg-[#2c2c2c] text-white mt-1 rounded shadow z-10 max-h-60 overflow-y-auto border border-gray-700 p-5">
+            <ul className="absolute top-full left-0 right-0 bg-[#2c2c2c] text-white mt-1 shadow z-10 max-h-60 overflow-y-auto border rounded-lg border-gray-700 p-5 m-5">
               {filtered.map((t, i) => (
                 <li
                   key={`${t.ticker}-${t.exchange}-${i}`}

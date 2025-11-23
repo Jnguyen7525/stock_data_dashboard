@@ -22,7 +22,6 @@ function getThresholdForTimeframe(tf: Timeframe): number {
     case "30Min":
       return 0.002; // 0.2%
     case "1H":
-    case "4H":
       return 0.005; // 0.5%
     case "1D":
     default:

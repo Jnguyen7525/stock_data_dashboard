@@ -6,13 +6,26 @@ export async function handler(event: any) {
 
     const url = `https://data.alpaca.markets/v1beta1/news?sort=desc&limit=${limit}${ticker ? `&symbols=${ticker}` : ""}`;
 
+    const secrets = process.env.secrets ? JSON.parse(process.env.secrets) : {};
+    const apiKey = process.env.ALPACA_API_KEY || secrets.ALPACA_API_KEY;
+    const apiSecret =
+      process.env.ALPACA_API_SECRET || secrets.ALPACA_API_SECRET;
+
     const res = await fetch(url, {
       headers: {
         accept: "application/json",
-        "APCA-API-KEY-ID": process.env.ALPACA_API_KEY!,
-        "APCA-API-SECRET-KEY": process.env.ALPACA_API_SECRET!,
+        "APCA-API-KEY-ID": apiKey,
+        "APCA-API-SECRET-KEY": apiSecret,
       },
     });
+
+    // const res = await fetch(url, {
+    //   headers: {
+    //     accept: "application/json",
+    //     "APCA-API-KEY-ID": process.env.ALPACA_API_KEY!,
+    //     "APCA-API-SECRET-KEY": process.env.ALPACA_API_SECRET!,
+    //   },
+    // });
 
     const text = await res.text(); // safer than res.json()
     console.log("Raw response:", text);
@@ -20,7 +33,7 @@ export async function handler(event: any) {
     if (!res.ok) {
       return {
         statusCode: res.status,
-        body: JSON.stringify({ error: "Failed to fetch news", details: text }),
+        body: JSON.stringify({ error: "Failed to fetch", details: text }),
       };
     }
 

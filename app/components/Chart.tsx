@@ -453,7 +453,7 @@ export default function Chart({ width, height }: Props) {
         console.log("🔎 Episode predictions:", episodes.slice(0, 2));
 
         // 🔎 Filter by confidence threshold
-        const confidenceThreshold = 0.7; // tune this (0.6–0.8 is common)
+        const confidenceThreshold = 0.65; // tune this (0.6–0.8 is common)
         const filteredEpisodes = episodes.filter(
           (ep) => ep.confidence >= confidenceThreshold
         );

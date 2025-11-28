@@ -33,6 +33,7 @@
     "scripts/generateAlpacaTickers.js",
     "scripts/convert-model.js",
     "app/ml-pipeline/supervisedTrainer.ts",
+    "amplify/**/*.ts", // ✅ include Amplify backend files
     "global.d.ts" // ✅ add this if you put it at root
   ],
   "exclude": ["node_modules"]

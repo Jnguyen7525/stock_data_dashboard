@@ -1,0 +1,10 @@
+{
+  "version": "1.4",
+  "custom": {
+    "API": {
+      "StockApi": {
+        "endpoint": "https://p0p1gesavh.execute-api.us-east-1.amazonaws.com/dev/"
+      }
+    }
+  }
+}

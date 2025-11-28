@@ -2,6 +2,7 @@
   "name": "stock-data",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,6 +10,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@aws-amplify/backend": "^1.18.0",
+    "@aws-amplify/backend-cli": "^1.8.0",
     "@inscribable/xg_boost_decision_tree_model": "^1.0.3",
     "@supabase/supabase-js": "^2.81.1",
     "@tensorflow/tfjs": "^4.22.0",
@@ -33,7 +36,6 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
-    "tailwindcss": "^4.1.17",
-    "typescript": "^5"
+    "tailwindcss": "^4.1.17"
   }
 }

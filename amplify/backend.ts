@@ -1,19 +1,9 @@
-// import { defineBackend } from "@aws-amplify/backend";
-// import { alpacaNews } from "./functions/alpacaNews/resource";
-// import { bars } from "./functions/bars/resource";
-
-// defineBackend({
-//   alpacaNews,
-//   bars,
-// });
-
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import {
   Cors,
   LambdaIntegration,
   AuthorizationType,
 } from "aws-cdk-lib/aws-apigateway";
-import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { defineBackend } from "@aws-amplify/backend";
 import { alpacaNews } from "./functions/alpacaNews/resource";
 import { bars } from "./functions/bars/resource";

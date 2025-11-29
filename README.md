@@ -3,7 +3,7 @@
 An interactive financial charting dashboard built with **React, Next.js, TypeScript, Lightweight Charts, TensorFlow.js, and AWS Amplify**.  
 The app visualizes OHLCV data, overlays technical indicators, and integrates a supervised machine learning model to predict regime labels (uptrend, downtrend, flat).
 
-**Live Demo:** [https://your-amplify-demo-link.amazonaws.com](https://your-amplify-demo-link.amazonaws.com)
+**Live Demo:** [https://main.d21csqh8ne40re.amplifyapp.com/](https://main.d21csqh8ne40re.amplifyapp.com/)
 
 ---
 
@@ -108,7 +108,6 @@ Each episode is represented by a 37‑dimensional feature vector engineered from
 Two supervised modes are supported:
 
 - **Direction labels (3 classes)**
-
   - Uptrend → `[1,0,0]`
   - Downtrend → `[0,1,0]`
   - Flat → `[0,0,1]`
@@ -135,4 +134,4 @@ These metrics provide a comprehensive view of model performance beyond simple ac
 ## 🔗 Links
 
 - GitHub: [your repo link]
-- Live Demo: [https://your-amplify-demo-link.amazonaws.com](https://your-amplify-demo-link.amazonaws.com)
+- Live Demo: [https://main.d21csqh8ne40re.amplifyapp.com/](https://main.d21csqh8ne40re.amplifyapp.com/)

@@ -1,3 +1,13 @@
+function showCharCodes(label: string, value: string | undefined) {
+  if (!value) {
+    console.log(`${label}: undefined`);
+    return;
+  }
+  const codes = value.split("").map((c) => c.charCodeAt(0));
+  console.log(`${label} raw:`, value);
+  console.log(`${label} char codes:`, codes);
+}
+
 export async function handler(event: any) {
   try {
     const params = event.queryStringParameters || {};
@@ -6,10 +16,12 @@ export async function handler(event: any) {
 
     const url = `https://data.alpaca.markets/v1beta1/news?sort=desc&limit=${limit}${ticker ? `&symbols=${ticker}` : ""}`;
 
-    const secrets = process.env.secrets ? JSON.parse(process.env.secrets) : {};
-    const apiKey = process.env.ALPACA_API_KEY || secrets.ALPACA_API_KEY;
-    const apiSecret =
-      process.env.ALPACA_API_SECRET || secrets.ALPACA_API_SECRET;
+    const apiKey = (process.env.ALPACA_API_KEY || "")
+      .trim()
+      .replace(/^"|"$/g, "");
+    const apiSecret = (process.env.ALPACA_API_SECRET || "")
+      .trim()
+      .replace(/^"|"$/g, "");
 
     const res = await fetch(url, {
       headers: {
@@ -18,14 +30,6 @@ export async function handler(event: any) {
         "APCA-API-SECRET-KEY": apiSecret,
       },
     });
-
-    // const res = await fetch(url, {
-    //   headers: {
-    //     accept: "application/json",
-    //     "APCA-API-KEY-ID": process.env.ALPACA_API_KEY!,
-    //     "APCA-API-SECRET-KEY": process.env.ALPACA_API_SECRET!,
-    //   },
-    // });
 
     const text = await res.text(); // safer than res.json()
     console.log("Raw response:", text);

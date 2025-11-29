@@ -107,10 +107,12 @@ export async function handler(event: any) {
 
     const url = `${BASE_URL}?symbols=${ticker}&timeframe=${granularity}&start=${start}&end=${end}&limit=1000&adjustment=raw&feed=sip&sort=asc`;
 
-    const secrets = process.env.secrets ? JSON.parse(process.env.secrets) : {};
-    const apiKey = process.env.ALPACA_API_KEY || secrets.ALPACA_API_KEY;
-    const apiSecret =
-      process.env.ALPACA_API_SECRET || secrets.ALPACA_API_SECRET;
+    const apiKey = (process.env.ALPACA_API_KEY || "")
+      .trim()
+      .replace(/^"|"$/g, "");
+    const apiSecret = (process.env.ALPACA_API_SECRET || "")
+      .trim()
+      .replace(/^"|"$/g, "");
 
     const res = await fetch(url, {
       headers: {
@@ -119,15 +121,6 @@ export async function handler(event: any) {
         "APCA-API-SECRET-KEY": apiSecret,
       },
     });
-
-    // const res = await fetch(url, {
-    //   method: "GET",
-    //   headers: {
-    //     accept: "application/json",
-    //     "APCA-API-KEY-ID": ALPACA_API_KEY,
-    //     "APCA-API-SECRET-KEY": ALPACA_SECRET_KEY,
-    //   },
-    // });
 
     const raw = await res.json();
 

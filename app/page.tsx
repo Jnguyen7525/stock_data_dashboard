@@ -65,7 +65,7 @@ export default function NewsPage() {
           <article className="mb-10 bg-[#1f1f1f] rounded-lg overflow-hidden shadow-lg">
             {mainStory.images && mainStory.images.length > 0 && (
               <img
-                src={mainStory.images.find((img) => img.size === "large")?.url}
+                src={mainStory.images.find((img) => img.size === "small")?.url}
                 alt={mainStory.headline}
                 className="w-full h-96 object-cover"
               />
@@ -98,45 +98,51 @@ export default function NewsPage() {
 
         {/* Grid for other stories */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {otherStories.map((item) => (
-            <article
-              key={item.id}
-              className="bg-[#1f1f1f] shadow-md rounded-lg overflow-hidden flex flex-col"
-            >
-              {item.images && item.images.length > 0 && (
-                <img
-                  src={item.images.find((img) => img.size === "small")?.url}
-                  alt={item.headline}
-                  className="w-full h-40 object-cover"
-                />
-              )}
-              <div className="p-4 flex flex-col flex-1">
-                <h2 className="text-lg font-semibold mb-2">
-                  <a
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:underline"
-                  >
-                    {item.headline}
-                  </a>
-                </h2>
-                <p className="text-sm text-gray-400 mb-3 line-clamp-3">
-                  {item.summary}
-                </p>
-                <div className="mt-auto text-xs text-gray-500">
-                  <span>{item.source}</span> •{" "}
-                  <span>{new Date(item.created_at).toLocaleString()}</span>
-                  {item.author && (
-                    <>
-                      {" "}
-                      • <span>{item.author}</span>
-                    </>
+          {otherStories.map(
+            (item) =>
+              item.images &&
+              item.summary !== " " && (
+                <article
+                  key={item.id}
+                  className="bg-[#1f1f1f] shadow-md rounded-lg overflow-hidden flex flex-col"
+                >
+                  {item.images && item.images.length > 0 && (
+                    <img
+                      src={item.images.find((img) => img.size === "small")?.url}
+                      alt={item.headline}
+                      className="w-full h-40 object-cover"
+                    />
                   )}
-                </div>
-              </div>
-            </article>
-          ))}
+                  <div className="p-4 flex flex-col flex-1 ">
+                    <h2 className="text-lg font-semibold mb-2">
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline"
+                      >
+                        {item.headline}
+                      </a>
+                    </h2>
+                    {item.summary && (
+                      <p className="text-sm text-gray-400 mb-3 line-clamp-3">
+                        {item.summary}
+                      </p>
+                    )}
+                    <div className="mt-auto text-xs text-gray-500">
+                      <span>{item.source}</span> •{" "}
+                      <span>{new Date(item.created_at).toLocaleString()}</span>
+                      {item.author && (
+                        <>
+                          {" "}
+                          • <span>{item.author}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              )
+          )}
         </div>
       </section>
       <Footer />

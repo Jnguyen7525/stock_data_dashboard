@@ -754,29 +754,22 @@ export default function Chart({ width, height }: Props) {
   useEffect(() => {
     const chart = chartRef.current;
     if (!chart || !isChartReady || !ticker) return;
-    // 🔻 Cleanup overlays when chart type changes
-    // if (seriesRef.current && seriesTypeRef.current !== chartType) {
-    if (Object.keys(overlayRefs.current).length > 0 && showTrends) {
-      // remove all overlay series
-      Object.keys(overlayRefs.current).forEach((key) => {
-        const overlaySeries = overlayRefs.current[key];
 
-        // If it's a series object, remove it from chart
-        if (overlaySeries && typeof overlaySeries.setData === "function") {
-          chart.removeSeries(overlaySeries);
-        }
+    // Cleanup overlays when showTrends is false
+    if (!showTrends) {
+      Object.keys(overlayRefs.current)
+        .filter((key) => key.startsWith("ML Dashed") || key === "MLMarkers")
+        .forEach((key) => {
+          const overlay = overlayRefs.current[key];
 
-        // If it's a marker primitive, clear markers instead
-        else if (
-          overlaySeries &&
-          typeof overlaySeries.setMarkers === "function"
-        ) {
-          overlaySeries.setMarkers([]);
-        }
+          if (overlay && typeof overlay.setData === "function") {
+            chart.removeSeries(overlay); // remove dashed line series
+          } else if (overlay && typeof overlay.setMarkers === "function") {
+            overlay.setMarkers([]); // clear markers
+          }
 
-        delete overlayRefs.current[key];
-      });
-      overlayRefs.current = {}; // reset overlay refs
+          delete overlayRefs.current[key];
+        });
     }
 
     runMLPredictionOverlay(

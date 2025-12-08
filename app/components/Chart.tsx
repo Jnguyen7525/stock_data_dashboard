@@ -52,6 +52,9 @@ export default function Chart({ width, height }: Props) {
   const indicatorRefs = useRef<Record<string, IndicatorRef>>({});
   const subPaneIndicators = new Set(["RSI", "MACD", "OBV"]);
   let nextPaneIndexRef = useRef<number>(2);
+  const prevTickerRef = useRef<string>("");
+  const prevTimeframeRef = useRef<string>("");
+  const prevDataRef = useRef<typeof candleStickData>([]);
 
   //! only for mocking realtime with static data
   const currentIndexRef = useRef(50);
@@ -756,7 +759,12 @@ export default function Chart({ width, height }: Props) {
     if (!chart || !isChartReady || !ticker) return;
 
     // Cleanup overlays when showTrends is false
-    if (!showTrends) {
+    if (
+      !showTrends ||
+      prevTickerRef.current !== ticker ||
+      prevDataRef.current !== candleStickData ||
+      prevTimeframeRef.current !== timeframe
+    ) {
       Object.keys(overlayRefs.current)
         .filter((key) => key.startsWith("ML Dashed") || key === "MLMarkers")
         .forEach((key) => {
@@ -770,6 +778,11 @@ export default function Chart({ width, height }: Props) {
 
           delete overlayRefs.current[key];
         });
+
+      // Update refs to current values
+      prevTickerRef.current = ticker;
+      prevDataRef.current = candleStickData;
+      prevTimeframeRef.current = timeframe;
     }
 
     runMLPredictionOverlay(

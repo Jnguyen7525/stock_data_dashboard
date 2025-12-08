@@ -17,9 +17,7 @@ interface ChartState {
   setChartType: (type: ChartType) => void;
   setTicker: (ticker: string) => void;
   setTimeframe: (tf: Timeframe) => void;
-  // updateChartSeries: (ticker: string, point: ChartPoint) => void;
-  // setChartSeries: (ticker: string, points: ChartPoint[]) => void;
-  // resetChartData: (ticker: string) => void;
+
   candleStickData: {
     time: number;
     open: number;
@@ -48,37 +46,13 @@ interface ChartState {
 
 export const useChartStore = create<ChartState>((set) => ({
   chartType: "candlestick",
-  ticker: "qqq",
+  ticker: "QQQ",
   timeframe: "1D",
   data: {},
   setChartType: (type) => set({ chartType: type }),
   setTicker: (ticker) => set({ ticker }),
   setTimeframe: (tf) => set({ timeframe: tf }),
-  // updateChartSeries: (ticker, point) =>
-  //   set((state) => {
-  //     const existing = state.data[ticker] || [];
-  //     const updated = [...existing, point].slice(-30);
-  //     return {
-  //       data: {
-  //         ...state.data,
-  //         [ticker]: updated,
-  //       },
-  //     };
-  //   }),
-  // setChartSeries: (ticker, points) =>
-  //   set((state) => ({
-  //     data: {
-  //       ...state.data,
-  //       [ticker]: points.slice(-30),
-  //     },
-  //   })),
-  // resetChartData: (ticker) =>
-  //   set((state) => ({
-  //     data: {
-  //       ...state.data,
-  //       [ticker]: [],
-  //     },
-  //   })),
+
   candleStickData: [],
   setCandleStickData: (data) => set({ candleStickData: data }),
   sidebarOpen: false,

@@ -137,8 +137,12 @@ export function convertBars(rawBars: RawBar[]): EnrichedBar[] {
   // Step 4: Compute indicators
   const ema = computeEMA(closeSeries, 14);
   const rsi = computeRSI(closeSeries, 14);
-  const obv = computeOBV(volumeSeries);
-  const vwap = computeVWAP(volumeSeries);
+  const obv = computeOBV(
+    volumeSeries as unknown as { time: number; value: number; volume: number }[]
+  );
+  const vwap = computeVWAP(
+    volumeSeries as unknown as { time: number; value: number; volume: number }[]
+  );
   const bb = computeBollingerBands(closeSeries, 20, 2);
 
   console.log("[convertBars] Indicators computed: EMA, RSI, OBV, VWAP, BB.");

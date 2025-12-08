@@ -15,17 +15,28 @@ export type EpisodePrediction = {
 
 function getThresholdForTimeframe(tf: Timeframe): number {
   switch (tf) {
+    // case "1Min":
+    // case "5Min":
+    //   return 0.001; // 0.1%
+    // case "15Min":
+    // case "30Min":
+    //   return 0.002; // 0.2%
+    // case "1H":
+    //   return 0.005; // 0.5%
+    // case "1D":
+    // default:
+    //   return 0.02; // 2%
     case "1Min":
     case "5Min":
-      return 0.001; // 0.1%
+      return 0.0005; // 0.1%
     case "15Min":
     case "30Min":
-      return 0.002; // 0.2%
+      return 0.001; // 0.2%
     case "1H":
-      return 0.005; // 0.5%
+      return 0.002; // 0.5%
     case "1D":
     default:
-      return 0.02; // 2%
+      return 0.01; // 2%
   }
 }
 
@@ -52,20 +63,20 @@ export async function getEpisodePredictions(
     threshold
   ) as unknown as EpisodeRow[];
 
-  console.log(`🔎 Built ${episodes.length} episodes`);
+  // console.log(`🔎 Built ${episodes.length} episodes`);
 
   // 2️⃣ Build feature tensor
   const Xnew = buildFeatureTensor(episodes);
-  console.log("🔎 Feature tensor shape:", Xnew.shape);
+  // console.log("🔎 Feature tensor shape:", Xnew.shape);
 
   // 3️⃣ Normalize
   const Xnorm = scaler.transform(Xnew);
-  console.log("🔎 Normalized tensor shape:", Xnorm.shape);
+  // console.log("🔎 Normalized tensor shape:", Xnorm.shape);
 
   // 4️⃣ Predict
   const preds = model.predict(Xnorm) as tf.Tensor;
   const yPred = (await preds.array()) as number[][];
-  console.log("🔎 Raw prediction sample:", yPred.slice(0, 5));
+  // console.log("🔎 Raw prediction sample:", yPred.slice(0, 5));
 
   // 5️⃣ Map predictions to episodes
   const predictions: EpisodePrediction[] = yPred.map((row, i) => {

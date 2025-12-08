@@ -108,7 +108,7 @@ export function computeWMA(data: ChartPoint[], period: number): ChartPoint[] {
 }
 
 export function computeVWAP(
-  data: { time: string; value: number; volume: number }[]
+  data: { time: number; value: number; volume: number }[]
 ): ChartPoint[] {
   const result: ChartPoint[] = [];
   let cumulativePV = 0;
@@ -129,7 +129,7 @@ export function computeVWAP(
 }
 
 export function computeOBV(
-  data: { time: string; value: number; volume: number }[]
+  data: { time: number; value: number; volume: number }[]
 ) {
   const result: ChartPoint[] = [];
   let obv = 0;

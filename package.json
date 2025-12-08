@@ -13,6 +13,8 @@
     "@aws-amplify/backend": "^1.18.0",
     "@aws-amplify/backend-cli": "^1.8.0",
     "@tensorflow/tfjs": "^4.22.0",
+    "candlestick": "^1.0.2",
+    "fast-technical-indicators": "^1.1.4",
     "lightweight-charts": "^5.0.9",
     "lucide-react": "^0.553.0",
     "next": "16.0.1",

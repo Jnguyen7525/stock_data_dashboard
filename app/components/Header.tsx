@@ -12,7 +12,7 @@ function Header() {
   const { setTicker } = useChartStore();
   const currentTicker = useChartStore((s) => s.ticker);
 
-  const { filtered, filterTickers, setAllTickers } = useSearchStore();
+  const { filteredTickers, filterTickers, setAllTickers } = useSearchStore();
 
   const [input, setInput] = useState(currentTicker);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -95,9 +95,9 @@ function Header() {
             className="text-[#83ffe6] cursor-pointer hover:opacity-50"
             onMouseDown={() => handleSelect(input)}
           />
-          {showDropdown && filtered.length > 0 && (
+          {showDropdown && filteredTickers.length > 0 && (
             <ul className="absolute top-full left-0 right-0 bg-[#2c2c2c] text-white mt-1 shadow z-10 max-h-60 overflow-y-auto border rounded-lg border-gray-700 p-5 m-5">
-              {filtered.map((t, i) => (
+              {filteredTickers.map((t, i) => (
                 <li
                   key={`${t.ticker}-${t.exchange}-${i}`}
                   className="px-3 py-1 hover:bg-gray-700 cursor-pointer"

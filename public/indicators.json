@@ -1,13 +1,49 @@
 [
-  { "name": "Simple Moving Average", "type": "trend" },
-  { "name": "Exponential Moving Average", "type": "trend" },
-  { "name": "Weighted Moving Average", "type": "trend" },
-
-  { "name": "RSI", "type": "momentum" },
+  { "name": "Simple Moving Average (SMA)", "type": "trend" },
+  { "name": "Exponential Moving Average (EMA)", "type": "trend" },
+  { "name": "Weighted Moving Average (WMA)", "type": "trend" },
+  { "name": "Wilder’s Exponential Moving Average (WEMA)", "type": "trend" },
   { "name": "MACD", "type": "momentum" },
 
-  { "name": "Bollinger Bands", "type": "volatility" },
+  { "name": "RSI", "type": "momentum" },
+  { "name": "CCI", "type": "momentum" },
+  { "name": "Awesome Oscillator", "type": "momentum" },
 
-  { "name": "OBV", "type": "volume" },
-  { "name": "VWAP", "type": "volume" }
+  { "name": "Rate of Change (ROC)", "type": "momentum" },
+  { "name": "Stochastic Oscillator", "type": "momentum" },
+  { "name": "Williams %R", "type": "momentum" },
+  { "name": "TRIX", "type": "momentum" },
+  { "name": "Stochastic RSI", "type": "momentum" },
+  { "name": "Parabolic SAR (PSAR)", "type": "trend" },
+  { "name": "Know Sure Thing (KST)", "type": "momentum" },
+  { "name": "Ultimate Oscillator", "type": "momentum" },
+  { "name": "Detrended Price Oscillator (DPO)", "type": "trend" },
+  { "name": "Price Oscillator", "type": "trend" },
+  { "name": "Percentage Price Oscillator (PPO)", "type": "trend" },
+
+  { "name": "On-Balance Volume (OBV)", "type": "volume" },
+  { "name": "Accumulation/Distribution Line (ADL)", "type": "volume" },
+  { "name": "VWAP", "type": "volume" },
+  { "name": "Force Index", "type": "volume" },
+  { "name": "Money Flow Index (MFI)", "type": "volume" },
+
+  { "name": "Bollinger Bands", "type": "volatility" },
+  { "name": "Average True Range (ATR)", "type": "volatility" },
+  { "name": "Keltner Channels", "type": "volatility" },
+  { "name": "Chandelier Exit", "type": "volatility" },
+  { "name": "Donchian Channels", "type": "volatility" },
+  { "name": "Volatility Index", "type": "volatility" },
+
+  { "name": "True Range", "type": "trend" },
+  { "name": "ADX (Average Directional Index)", "type": "trend" },
+  { "name": "Plus DM", "type": "trend" },
+  { "name": "Minus DM", "type": "trend" },
+
+  { "name": "Ichimoku Cloud", "type": "trend" },
+  { "name": "SuperTrend", "type": "trend" },
+  { "name": "Aroon Indicator", "type": "trend" },
+  { "name": "Aroon Oscillator", "type": "trend" },
+  { "name": "Linear Regression", "type": "trend" },
+  { "name": "Moving Average Envelope", "type": "trend" },
+  { "name": "Pivot Points", "type": "trend" }
 ]

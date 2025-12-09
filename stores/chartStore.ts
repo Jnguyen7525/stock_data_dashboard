@@ -2,18 +2,13 @@ import { create } from "zustand";
 
 type ChartType = "line" | "candlestick";
 
-interface ChartPoint {
-  time: string; // 'YYYY-MM-DD'
-  value: number;
-}
-
 export type Timeframe = "1Min" | "5Min" | "15Min" | "30Min" | "1H" | "1D";
 
 interface ChartState {
   chartType: ChartType;
   ticker: string;
   timeframe: Timeframe;
-  // data: Record<string, ChartPoint[]>;
+
   setChartType: (type: ChartType) => void;
   setTicker: (ticker: string) => void;
   setTimeframe: (tf: Timeframe) => void;

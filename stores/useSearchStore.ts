@@ -6,24 +6,61 @@ interface TickerInfo {
   assetType: string;
 }
 
+interface LayoutTickers {
+  ticker: string;
+  dir: string;
+}
+
 interface SearchState {
   allTickers: TickerInfo[];
-  filtered: TickerInfo[];
+  filteredTickers: TickerInfo[];
+
+  comparedTickers: string[];
+  layoutTickers: LayoutTickers[];
+
   setAllTickers: (list: TickerInfo[]) => void;
   filterTickers: (query: string) => void;
+
+  addCompare: (ticker: string) => void;
+  removeCompare: (ticker: string) => void;
+
+  addLayout: (ticker: string, dir: string) => void;
+  removeLayout: (ticker: string) => void;
 }
 
 export const useSearchStore = create<SearchState>((set) => ({
   allTickers: [],
-  filtered: [],
-  setAllTickers: (list) => set({ allTickers: list }),
+  filteredTickers: [],
 
+  comparedTickers: [],
+  layoutTickers: [],
+
+  setAllTickers: (list) => set({ allTickers: list }),
   filterTickers: (query) =>
-    set((state) => {
-      const matches = state.allTickers
-        .filter((t) => t.ticker.startsWith(query.toUpperCase()))
-        .slice(0, 10);
-      console.log("Filtered matches:", matches);
-      return { filtered: matches };
-    }),
+    set((state) => ({
+      filteredTickers: state.allTickers.filter((t) =>
+        t.ticker.toLowerCase().includes(query.toLowerCase())
+      ),
+    })),
+
+  addCompare: (ticker) =>
+    set((state) => ({
+      comparedTickers: [...new Set([...state.comparedTickers, ticker])],
+    })),
+  removeCompare: (ticker) =>
+    set((state) => ({
+      comparedTickers: state.comparedTickers.filter((i) => i !== ticker),
+    })),
+
+  addLayout: (ticker: string, dir: string) =>
+    set((state) => ({
+      layoutTickers: [
+        ...state.layoutTickers.filter((l) => l.ticker !== ticker),
+        { ticker, dir },
+      ],
+    })),
+  removeLayout: (ticker) =>
+    set((state) => ({
+      layoutTickers: state.layoutTickers.filter((l) => l.ticker !== ticker),
+    })),
 }));

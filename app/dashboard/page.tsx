@@ -28,11 +28,11 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <main className="bg-[#2c2c2c] text-white max-w-[100vw] w-screen min-h-screen max-h-screen h-auto flex flex-col relative  ">
-      <Header />
+    <main className="bg-[#2c2c2c] text-white max-w-[100vw] w-screen min-h-screen max-h-screen h-auto flex flex-col relative p-3 ">
+      {/* <Header /> */}
 
       {/* Main content area */}
-      <div className="flex flex-1 min-h-0 max-w-[100vw] relative overflow-hidden">
+      <div className="flex flex-1 min-h-screen max-w-[100vw] relative overflow-hidden">
         {/* Chart area (70%) */}
         <div
           className={`z-0 ${
@@ -47,7 +47,7 @@ export default function Dashboard() {
           {/* Chart container */}
           <div
             ref={containerRef}
-            className="flex-1 min-h-0 p-6 overflow-hidden relative"
+            className="flex-1 min-h-0 py-5 sm:px-5 overflow-hidden relative"
           >
             <Chart width={size.width} height={size.height} />
           </div>

@@ -13,12 +13,15 @@ import {
   LineChart,
   PanelRightClose,
   PanelRightOpen,
+  Search,
   SquareFunctionIcon,
 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function ChartToolbar() {
   const {
+    setTicker,
     setChartType,
     timeframe,
     setTimeframe,
@@ -61,12 +64,14 @@ export default function ChartToolbar() {
     | "patterns"
     | "compare"
     | "layout"
+    | "ticker"
   >(null);
 
   const [searchIndicators, setSearchIndicators] = useState<string>("");
   const [searchPatterns, setSearchPatterns] = useState<string>("");
   const [searchCompare, setSearchCompare] = useState("");
   const [searchLayouts, setSearchLayouts] = useState("");
+  const [searchTicker, setSearchTicker] = useState("");
 
   const toggleDropdown = (
     name:
@@ -77,6 +82,7 @@ export default function ChartToolbar() {
       | "patterns"
       | "compare"
       | "layout"
+      | "ticker"
   ) => {
     setOpenDropdown(openDropdown === name ? null : name);
   };
@@ -156,21 +162,91 @@ export default function ChartToolbar() {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row w-full justify-start items-center sm:gap-5 px-3 bg-[#2c2c2c] rounded text-white relative">
-      <div className="flex items-center gap-3 sm:gap-4">
-        <div className="text-[#83ffe6] font-bold tracking-wide sm:text-lg underline underline-offset-4">
-          {currentTicker ? `${currentTicker}` : ""}
+    <div className="flex flex-col sm:flex-row w-full justify-start items-center sm:gap-5 sm:px-3 bg-[#2c2c2c] rounded text-white relative ">
+      <div className="flex items-center justify-between sm:justify-start w-full sm:gap-5">
+        <Link
+          href={"/"}
+          className="flex items-center font-extrabold hover:opacity-80 relative"
+        >
+          {/* Logo Icon */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-7 h-7 text-[#83ffe6]"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3 17l6-6 4 4 8-8"
+            />
+          </svg>
+          {/* Logo Text */}
+          <span className="  text-[#9B7DFF] sm:text-xl sm:font-extrabold drop-shadow-md ">
+            MT
+          </span>{" "}
+        </Link>
+        {/* Divider line */}
+        <div className="w-0.5 h-7 bg-gray-500 sm:-mx-3"></div>
+        <div className="relative ">
+          <button
+            onClick={() => toggleDropdown("ticker")}
+            className=" gap-1 rounded-lg hover:opacity-50 cursor-pointer flex items-center justify-center"
+          >
+            <div className="font-semibold sm:text-lg items-center">
+              {currentTicker ? `${currentTicker}` : ""}
+            </div>{" "}
+            <Search className="w-5 h-5 text-[#83ffe6]" />
+          </button>
+          {openDropdown === "ticker" && (
+            <ul className="absolute top-full -left-16 mt-2 bg-[#2c2c2c] text-white rounded shadow z-50 w-64 overflow-y-auto max-h-[50vh]">
+              {/* Search input */}
+              <li className="px-2 py-2">
+                <input
+                  type="text"
+                  placeholder="Search tickers..."
+                  value={searchTicker}
+                  onChange={(e) =>
+                    setSearchTicker(e.target.value.toUpperCase())
+                  }
+                  className="w-full px-2 py-1 rounded bg-[#1c1c1c] text-white focus:outline-none"
+                />
+              </li>
+
+              {/* Only show filtered list if user typed something */}
+              {searchTicker !== "" &&
+                allTickers
+                  .filter((t) =>
+                    t.ticker.toLowerCase().includes(searchTicker.toLowerCase())
+                  )
+                  .map((t, i) => (
+                    <li
+                      key={`${t.ticker}-${i}`}
+                      className="px-2 py-1 hover:opacity-50 cursor-pointer"
+                      onClick={() => {
+                        setTicker(t.ticker);
+                        setOpenDropdown(null);
+                        setSearchCompare(""); // reset search
+                      }}
+                    >
+                      {t.ticker} ({t.exchange})
+                    </li>
+                  ))}
+            </ul>
+          )}
         </div>
         <div className="relative">
           <button
             onClick={() => toggleDropdown("ml")}
-            className="bg-[#c2b0ff] text-[#2c2c2c] p-0.5 rounded-lg hover:opacity-50 cursor-pointer"
+            className="text-[#c2b0ff] rounded-lg hover:opacity-50 cursor-pointer flex items-center justify-center"
           >
             {/* See Trends */}
             <BrainCog className="w-5 h-5" />
           </button>
           {openDropdown === "ml" && (
-            <ul className="absolute top-full left-0 mt-2 bg-[#c2b0ff] text-[#2c2c2c] rounded-sm shadow z-50 flex w-36">
+            <ul className="absolute top-full -left-14 mt-2 bg-[#c2b0ff] text-[#2c2c2c] rounded-sm shadow z-50 flex w-36">
               {["Classify Trends"].map((ml) => (
                 <li
                   key={ml}
@@ -191,13 +267,13 @@ export default function ChartToolbar() {
         <div className="relative">
           <button
             onClick={() => toggleDropdown("indicator")}
-            className="p-2 rounded hover:opacity-50 cursor-pointer flex items-center"
+            className=" rounded hover:opacity-50 cursor-pointer flex items-center"
           >
             <SquareFunctionIcon className="w-5 h-5 text-white" />
           </button>
 
           {openDropdown === "indicator" && (
-            <ul className="absolute top-full left-0 mt-2 bg-[#2c2c2c] text-white rounded shadow z-50 w-64 overflow-y-auto max-h-[50vh]">
+            <ul className="absolute top-full -left-24 mt-2 bg-[#2c2c2c] text-white rounded shadow z-50 w-64 overflow-y-auto max-h-[50vh]">
               {/* Search input */}
               <li className="px-2 py-2">
                 <input
@@ -239,12 +315,12 @@ export default function ChartToolbar() {
         <div className="relative">
           <button
             onClick={() => toggleDropdown("patterns")}
-            className="p-2 rounded hover:opacity-50 cursor-pointer flex items-center"
+            className=" rounded hover:opacity-50 cursor-pointer flex items-center"
           >
             <ChartCandlestick className="w-5 h-5 text-white" />
           </button>
           {openDropdown === "patterns" && (
-            <ul className="absolute top-full left-0 mt-2 bg-[#2c2c2c] text-white rounded shadow z-50 w-64 overflow-y-auto max-h-[50vh]">
+            <ul className="absolute top-full -left-26 mt-2 bg-[#2c2c2c] text-white rounded shadow z-50 w-64 overflow-y-auto max-h-[50vh]">
               {/* Search input */}
               <li className="px-2 py-2">
                 <input
@@ -288,13 +364,13 @@ export default function ChartToolbar() {
         <div className="relative">
           <button
             onClick={() => toggleDropdown("compare")}
-            className="p-2 rounded hover:opacity-50 cursor-pointer flex items-center"
+            className=" rounded hover:opacity-50 cursor-pointer flex items-center"
           >
             <CirclePlus className="w-5 h-5 text-white" />
           </button>
 
           {openDropdown === "compare" && (
-            <ul className="absolute top-full left-0 mt-2 bg-[#2c2c2c] text-white rounded shadow z-50 w-64 overflow-y-auto max-h-[50vh]">
+            <ul className="absolute top-full -left-30 mt-2 bg-[#2c2c2c] text-white rounded shadow z-50 w-64 overflow-y-auto max-h-[50vh]">
               {/* Search input */}
               <li className="px-2 py-2">
                 <input
@@ -335,13 +411,13 @@ export default function ChartToolbar() {
         <div className="relative">
           <button
             onClick={() => toggleDropdown("layout")}
-            className="p-2 rounded hover:opacity-50 cursor-pointer flex items-center"
+            className=" rounded hover:opacity-50 cursor-pointer flex items-center"
           >
             <LayoutGrid className="w-5 h-5 text-white" />
           </button>
 
           {openDropdown === "layout" && (
-            <ul className="absolute top-full left-0 mt-2 bg-[#2c2c2c] text-white rounded shadow z-50 w-64 overflow-y-auto max-h-[50vh]">
+            <ul className="absolute top-full -left-36 mt-2 bg-[#2c2c2c] text-white rounded shadow z-50 w-64 overflow-y-auto max-h-[50vh]">
               {/* Search input */}
               <li className="px-2 py-2">
                 <input
@@ -377,7 +453,7 @@ export default function ChartToolbar() {
         </div>
 
         {/* Timeframe Dropdown Trigger */}
-        <div className="relative flex items-center gap-2 p-2 rounded group cursor-pointer">
+        <div className="relative flex items-center gap-1 rounded group cursor-pointer">
           <div
             className="flex gap-2 items-center group-hover:opacity-50"
             onClick={() => toggleDropdown("timeframe")}
@@ -389,7 +465,7 @@ export default function ChartToolbar() {
             <Clock className="w-5 h-5 text-white" />
           </div>
           {openDropdown === "timeframe" && (
-            <ul className="absolute top-full left-0 mt-2 bg-[#2c2c2c] text-white rounded shadow z-50 w-28">
+            <ul className="absolute top-full -left-4 mt-2 bg-[#2c2c2c] text-white rounded shadow z-50 w-28">
               {["1Min", "5Min", "15Min", "30Min", "1H", "1D"].map((tf) => (
                 <li
                   key={tf}
@@ -410,12 +486,12 @@ export default function ChartToolbar() {
         <div className="relative">
           <button
             onClick={() => toggleDropdown("chart")}
-            className="p-2 rounded hover:opacity-50 cursor-pointer"
+            className=" rounded hover:opacity-50 cursor-pointer flex items-center"
           >
             <LineChart className="w-5 h-5 text-white" />
           </button>
           {openDropdown === "chart" && (
-            <ul className="absolute top-full -left-15 sm:left-0 mt-2 bg-[#2c2c2c] text-white rounded shadow z-50 w-40">
+            <ul className="absolute top-full -left-15 sm:-left-10 mt-2 bg-[#2c2c2c] text-white rounded shadow z-50 w-40">
               <li
                 className="px-3 py-2 hover:opacity-50  cursor-pointer"
                 onClick={() => {
@@ -432,7 +508,7 @@ export default function ChartToolbar() {
                   setOpenDropdown(null);
                 }}
               >
-                Candlestick Chart
+                Candlesticks
               </li>
             </ul>
           )}

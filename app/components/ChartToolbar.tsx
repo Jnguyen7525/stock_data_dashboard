@@ -1,6 +1,5 @@
 "use client";
 
-import { getAvailableIndicators } from "@/lib/indicators/index";
 import { Timeframe, useChartStore } from "@/stores/chartStore";
 import { useIndicatorStore } from "@/stores/useIndicatorStore";
 import { useSearchStore } from "@/stores/useSearchStore";
@@ -11,22 +10,26 @@ import {
   Clock,
   LayoutGrid,
   LineChart,
-  PanelRightClose,
-  PanelRightOpen,
   Search,
   SquareFunctionIcon,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-export default function ChartToolbar() {
+export default function ChartToolbar({
+  ticker,
+  isMainChart,
+}: {
+  ticker: string;
+  isMainChart: boolean;
+}) {
   const {
     setTicker,
     setChartType,
     timeframe,
     setTimeframe,
-    toggleSidebar,
-    sidebarOpen,
+    showTrends,
     setShowTrends,
   } = useChartStore();
   const currentTicker = useChartStore((s) => s.ticker);
@@ -39,6 +42,14 @@ export default function ChartToolbar() {
     layoutTickers,
     addCompare,
     addLayout,
+    addLayoutIndicator,
+    addLayoutPattern,
+    addLayoutCompare,
+    removeLayout,
+    setLayoutTimeframe,
+    toggleLayoutTrends,
+    setLayoutChartType,
+    setLayoutTicker,
   } = useSearchStore();
 
   const {
@@ -54,6 +65,95 @@ export default function ChartToolbar() {
 
   const [input, setInput] = useState(currentTicker);
   const [showDropdown, setShowDropdown] = useState(false);
+
+  const currentState = useSearchStore((state) =>
+    state.layoutTickers.find((l) => l.ticker === ticker)
+  );
+
+  const pushIndicator = (indicator: string) => {
+    if (isMainChart) {
+      if (indicator && !selectedIndicators.includes(indicator)) {
+        addIndicator(indicator); // main chart store
+      }
+    } else {
+      console.log(
+        "indicator in layout:",
+        currentState?.selectedIndicators,
+        indicator
+      );
+      if (indicator && !currentState?.selectedIndicators.includes(indicator)) {
+        addLayoutIndicator(ticker, indicator); // layout ticker store
+      }
+    }
+  };
+
+  const pushPattern = (pattern: string) => {
+    if (isMainChart) {
+      if (pattern && !selectedPatterns.includes(pattern)) {
+        addPattern(pattern); // main chart store
+      }
+    } else {
+      console.log(
+        "indicator in layout:",
+        currentState?.selectedIndicators,
+        pattern
+      );
+      if (pattern && !currentState?.selectedPatterns.includes(pattern)) {
+        addLayoutPattern(ticker, pattern); // layout ticker store
+      }
+    }
+  };
+
+  const pushCompare = (compareTicker: string) => {
+    if (isMainChart) {
+      if (ticker && !comparedTickers.includes(compareTicker)) {
+        addCompare(compareTicker); // main chart store
+      }
+    } else {
+      console.log(
+        "indicator in layout:",
+        currentState?.compareTickers,
+        compareTicker
+      );
+      if (ticker && !currentState?.compareTickers.includes(compareTicker)) {
+        addLayoutCompare(ticker, compareTicker); // layout ticker store
+      }
+    }
+  };
+
+  const setChartTime = (timeframe: string) => {
+    if (isMainChart) {
+      setTimeframe(timeframe as Timeframe); // main chart store
+    } else {
+      console.log(`time for ${ticker}`, timeframe);
+      setLayoutTimeframe(ticker, timeframe as Timeframe); // layout ticker store
+    }
+  };
+
+  const setCurrentChartType = (type: "line" | "candlestick") => {
+    if (isMainChart) {
+      setChartType(type); // main chart store
+    } else {
+      console.log(`type for ${ticker}`, type);
+      setLayoutChartType(ticker, type); // layout ticker store
+    }
+  };
+
+  const toogleTrends = () => {
+    if (isMainChart) {
+      setShowTrends(); // main chart store
+    } else {
+      toggleLayoutTrends(ticker); // layout ticker store
+    }
+  };
+
+  const changeTicker = (searchedTicker: string) => {
+    if (isMainChart) {
+      setTicker(searchedTicker); // main chart store
+    } else {
+      setLayoutTicker(ticker, searchedTicker); // layout ticker store
+    }
+  };
 
   const [openDropdown, setOpenDropdown] = useState<
     | null
@@ -104,8 +204,6 @@ export default function ChartToolbar() {
     const loadIndicators = async () => {
       const res = await fetch("/indicators.json");
       const data = await res.json();
-      const availableIndicators = getAvailableIndicators();
-      console.log(`list of indicators: `, availableIndicators);
       setAllIndicators(data);
     };
     const loadPatterns = async () => {
@@ -133,24 +231,15 @@ export default function ChartToolbar() {
   }, [input, currentTicker]);
 
   const handleAddIndicator = (name: string) => {
-    if (name && !selectedIndicators.includes(name)) {
-      console.log(`adding indicator in toolbar: ${name}`);
-      addIndicator(name);
-    }
+    pushIndicator(name);
   };
 
   const handleAddPattern = (name: string) => {
-    if (name && !selectedPatterns.includes(name)) {
-      console.log(`adding indicator in toolbar: ${name}`);
-      addPattern(name);
-    }
+    pushPattern(name);
   };
 
   const handleAddCompare = (name: string) => {
-    if (name && !comparedTickers.includes(name)) {
-      console.log(`adding indicator in toolbar: ${name}`);
-      addCompare(name);
-    }
+    pushCompare(name);
   };
 
   const handleAddLayout = (name: string, dir: string = "right") => {
@@ -162,8 +251,8 @@ export default function ChartToolbar() {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row w-full justify-start items-center sm:gap-5 sm:px-3 bg-[#2c2c2c] rounded text-white relative ">
-      <div className="flex items-center justify-between sm:justify-start w-full sm:gap-5">
+    <div className="flex flex-col sm:flex-row w-full justify-start items-center sm:gap-4 bg-[#2c2c2c] rounded text-white relative">
+      <div className="flex items-center justify-between sm:justify-start w-full sm:gap-4 ">
         <Link
           href={"/"}
           className="flex items-center font-extrabold hover:opacity-80 relative"
@@ -184,20 +273,20 @@ export default function ChartToolbar() {
             />
           </svg>
           {/* Logo Text */}
-          <span className="  text-[#9B7DFF] sm:text-xl sm:font-extrabold drop-shadow-md ">
+          <span className="  text-[#9B7DFF] sm:font-extrabold drop-shadow-md ">
             MT
-          </span>{" "}
+          </span>
         </Link>
         {/* Divider line */}
-        <div className="w-0.5 h-7 bg-gray-500 sm:-mx-3"></div>
+        <div className="w-0.5 h-7 bg-gray-500 -mx sm:-mx-3"></div>
         <div className="relative ">
           <button
             onClick={() => toggleDropdown("ticker")}
             className=" gap-1 rounded-lg hover:opacity-50 cursor-pointer flex items-center justify-center"
           >
             <div className="font-semibold sm:text-lg items-center">
-              {currentTicker ? `${currentTicker}` : ""}
-            </div>{" "}
+              {ticker ? `${ticker}` : ""}
+            </div>
             <Search className="w-5 h-5 text-[#83ffe6]" />
           </button>
           {openDropdown === "ticker" && (
@@ -226,7 +315,8 @@ export default function ChartToolbar() {
                       key={`${t.ticker}-${i}`}
                       className="px-2 py-1 hover:opacity-50 cursor-pointer"
                       onClick={() => {
-                        setTicker(t.ticker);
+                        // setTicker(t.ticker);
+                        changeTicker(t.ticker);
                         setOpenDropdown(null);
                         setSearchCompare(""); // reset search
                       }}
@@ -246,13 +336,16 @@ export default function ChartToolbar() {
             <BrainCog className="w-5 h-5" />
           </button>
           {openDropdown === "ml" && (
-            <ul className="absolute top-full -left-14 mt-2 bg-[#c2b0ff] text-[#2c2c2c] rounded-sm shadow z-50 flex w-36">
+            <ul
+              className={`${isMainChart ? (showTrends ? "bg-[#ff5f5f]" : "bg-[#c2b0ff]") : currentState?.showTrends ? "bg-[#ff5f5f]" : "bg-[#c2b0ff]"} absolute top-full -left-14 mt-2  text-[#2c2c2c] rounded-sm shadow z-50 flex w-36`}
+            >
               {["Classify Trends"].map((ml) => (
                 <li
                   key={ml}
                   className="px-3 py-2 w-fit hover:opacity-50 cursor-pointer"
                   onClick={() => {
-                    setShowTrends();
+                    // setShowTrends();
+                    toogleTrends();
                     setOpenDropdown(null);
                   }}
                 >
@@ -285,7 +378,6 @@ export default function ChartToolbar() {
                 />
               </li>
 
-              {/* Add Indicator option */}
               {/* Filtered list */}
               {allIndicators
                 .filter((ind) =>
@@ -332,7 +424,6 @@ export default function ChartToolbar() {
                 />
               </li>
 
-              {/* Add Indicator option */}
               {/* Filtered list */}
               {allPatterns
                 .filter((pat) =>
@@ -359,7 +450,6 @@ export default function ChartToolbar() {
           )}
         </div>
 
-        {/* compare tickers dropdown */}
         {/* compare tickers dropdown */}
         <div className="relative">
           <button
@@ -406,51 +496,55 @@ export default function ChartToolbar() {
             </ul>
           )}
         </div>
-        {/* multiple charts */}
+
         {/* multiple charts dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => toggleDropdown("layout")}
-            className=" rounded hover:opacity-50 cursor-pointer flex items-center"
-          >
-            <LayoutGrid className="w-5 h-5 text-white" />
-          </button>
+        {isMainChart && (
+          <div className="relative">
+            <button
+              onClick={() => toggleDropdown("layout")}
+              className=" rounded hover:opacity-50 cursor-pointer flex items-center"
+            >
+              <LayoutGrid className="w-5 h-5 text-white" />
+            </button>
 
-          {openDropdown === "layout" && (
-            <ul className="absolute top-full -left-36 mt-2 bg-[#2c2c2c] text-white rounded shadow z-50 w-64 overflow-y-auto max-h-[50vh]">
-              {/* Search input */}
-              <li className="px-2 py-2">
-                <input
-                  type="text"
-                  placeholder="ticker for another chart..."
-                  value={searchLayouts}
-                  onChange={(e) => setSearchLayouts(e.target.value)}
-                  className="w-full px-2 py-1 rounded bg-[#1c1c1c] text-white focus:outline-none"
-                />
-              </li>
+            {openDropdown === "layout" && (
+              <ul className="absolute top-full -left-36 mt-2 bg-[#2c2c2c] text-white rounded shadow z-50 w-64 overflow-y-auto max-h-[50vh]">
+                {/* Search input */}
+                <li className="px-2 py-2">
+                  <input
+                    type="text"
+                    placeholder="ticker for another chart..."
+                    value={searchLayouts}
+                    onChange={(e) => setSearchLayouts(e.target.value)}
+                    className="w-full px-2 py-1 rounded bg-[#1c1c1c] text-white focus:outline-none"
+                  />
+                </li>
 
-              {/* Filtered list */}
-              {searchLayouts !== "" &&
-                allTickers
-                  .filter((t) =>
-                    t.ticker.toLowerCase().includes(searchLayouts.toLowerCase())
-                  )
-                  .map((t, i) => (
-                    <li
-                      key={`${t.ticker}-${i}`}
-                      className="px-2 py-1 hover:opacity-50 cursor-pointer"
-                      onClick={() => {
-                        handleAddLayout(t.ticker);
-                        setOpenDropdown(null);
-                        setSearchLayouts(""); // reset search
-                      }}
-                    >
-                      {t.ticker} ({t.exchange})
-                    </li>
-                  ))}
-            </ul>
-          )}
-        </div>
+                {/* Filtered list */}
+                {searchLayouts !== "" &&
+                  allTickers
+                    .filter((t) =>
+                      t.ticker
+                        .toLowerCase()
+                        .includes(searchLayouts.toLowerCase())
+                    )
+                    .map((t, i) => (
+                      <li
+                        key={`${t.ticker}-${i}`}
+                        className="px-2 py-1 hover:opacity-50 cursor-pointer"
+                        onClick={() => {
+                          handleAddLayout(t.ticker);
+                          setOpenDropdown(null);
+                          setSearchLayouts(""); // reset search
+                        }}
+                      >
+                        {t.ticker} ({t.exchange})
+                      </li>
+                    ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         {/* Timeframe Dropdown Trigger */}
         <div className="relative flex items-center gap-1 rounded group cursor-pointer">
@@ -459,7 +553,7 @@ export default function ChartToolbar() {
             onClick={() => toggleDropdown("timeframe")}
           >
             <span className="text-sm text-white group-hover:opacity-50 cursor-pointer">
-              {timeframe}
+              {isMainChart ? timeframe : currentState?.timeframe}
             </span>
 
             <Clock className="w-5 h-5 text-white" />
@@ -471,7 +565,8 @@ export default function ChartToolbar() {
                   key={tf}
                   className="px-3 py-2 hover:opacity-50  cursor-pointer"
                   onClick={() => {
-                    setTimeframe(tf as Timeframe);
+                    // setTimeframe(tf as Timeframe);
+                    setChartTime(tf);
                     setOpenDropdown(null);
                   }}
                 >
@@ -495,7 +590,8 @@ export default function ChartToolbar() {
               <li
                 className="px-3 py-2 hover:opacity-50  cursor-pointer"
                 onClick={() => {
-                  setChartType("line");
+                  // setChartType("line");
+                  setCurrentChartType("line");
                   setOpenDropdown(null);
                 }}
               >
@@ -504,7 +600,8 @@ export default function ChartToolbar() {
               <li
                 className="px-3 py-2 hover:opacity-50  cursor-pointer"
                 onClick={() => {
-                  setChartType("candlestick");
+                  // setChartType("candlestick");
+                  setCurrentChartType("candlestick");
                   setOpenDropdown(null);
                 }}
               >
@@ -513,18 +610,12 @@ export default function ChartToolbar() {
             </ul>
           )}
         </div>
-        <button
-          onClick={toggleSidebar}
-          className={`sm:absolute right-0 mr-1 rounded  text-black hover:opacity-50 cursor-pointer transition-transform ${
-            sidebarOpen ? "bg-[#ff5f5f]" : "bg-[#83ffe6]"
-          }`}
-        >
-          {sidebarOpen ? (
-            <PanelRightClose className="w-5 h-5" />
-          ) : (
-            <PanelRightOpen className="w-5 h-5" />
-          )}
-        </button>
+        {!isMainChart && (
+          <X
+            className="bg-[#ff5f5f] rounded-sm cursor-pointer hover:opacity-50"
+            onClick={() => removeLayout(ticker)}
+          />
+        )}
       </div>
     </div>
   );

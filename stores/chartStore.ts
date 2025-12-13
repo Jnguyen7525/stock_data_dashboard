@@ -41,7 +41,7 @@ interface ChartState {
 
 export const useChartStore = create<ChartState>((set) => ({
   chartType: "candlestick",
-  ticker: "",
+  ticker: "qqq",
   timeframe: "1D",
   data: {},
   setChartType: (type) => set({ chartType: type }),

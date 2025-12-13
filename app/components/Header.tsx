@@ -50,7 +50,7 @@ function Header() {
   };
 
   return (
-    <div className="flex w-full p-3 justify-between items-center relative">
+    <div className="flex w-full max-w-screen p-3 justify-between items-center relative">
       <Link
         href={"/"}
         className="flex items-center sm:gap-2 font-extrabold sm:tracking-[0.25em] hover:opacity-80"
@@ -72,15 +72,15 @@ function Header() {
         </svg>
 
         {/* Logo Text */}
-        <span className="text-[#9B7DFF] sm:text-xl sm:font-extrabold drop-shadow-md uppercase">
-          MARKET TALK
+        <span className="text-[#9B7DFF] text-sm sm:text-xl sm:font-extrabold drop-shadow-md">
+          MARKETTALK
         </span>
       </Link>
 
-      <div className="flex w-fit sm:w-1/3 justify-end sm:gap-5">
-        <div className="flex  justify-between border-b border-[#83ffe6] text-white px-3 py-1">
+      <div className="flex w-[180px] sm:w-1/3 justify-end sm:gap-5">
+        <div className="flex w-full justify-between border-b border-[#83ffe6] text-white px-3 py-1">
           <input
-            className="text-white outline-none "
+            className="text-white outline-none flex w-full "
             placeholder="Search ticker..."
             value={input}
             onChange={(e) => setInput(e.target.value.toUpperCase())}

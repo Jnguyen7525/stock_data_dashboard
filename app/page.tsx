@@ -52,7 +52,7 @@ export default function NewsPage() {
   const otherStories = news.slice(1);
 
   return (
-    <main className="bg-[#2c2c2c] text-white w-full h-full min-w-screen min-h-screen flex flex-col overflow-auto">
+    <main className="bg-[#2c2c2c] text-white w-full h-full min-w-screen max-w-screen  min-h-screen flex flex-col overflow-auto">
       <Header />
 
       <section className="max-w-6xl mx-auto px-6 py-8 flex-1">

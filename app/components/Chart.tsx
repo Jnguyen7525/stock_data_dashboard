@@ -115,6 +115,8 @@ import { useSearchStore } from "@/stores/useSearchStore";
 interface Props {
   width: number;
   height: number;
+  currentTicker: string;
+  isMainChart: boolean;
 }
 
 type IndicatorRef = {
@@ -122,7 +124,12 @@ type IndicatorRef = {
   paneIndex: number;
 };
 
-export default function Chart({ width, height }: Props) {
+export default function Chart({
+  width,
+  height,
+  currentTicker,
+  isMainChart,
+}: Props) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
   const seriesRef = useRef<any>(null);
@@ -170,6 +177,10 @@ export default function Chart({ width, height }: Props) {
   const prevTickerRef = useRef<string>("");
   const prevTimeframeRef = useRef<string>("");
   const prevDataRef = useRef<typeof candleStickData>([]);
+  // !to track whether chart is the initial main chart or added later as added layout
+  const currentState = useSearchStore((state) =>
+    state.layoutTickers.find((l) => l.ticker === currentTicker)
+  );
 
   //! only for mocking realtime with static data
   const currentIndexRef = useRef(50);
@@ -184,7 +195,8 @@ export default function Chart({ width, height }: Props) {
     setCandleStickData,
   } = useChartStore();
   const { selectedIndicators, selectedPatterns } = useIndicatorStore();
-  const { comparedTickers, layoutTickers } = useSearchStore();
+  const { comparedTickers, layoutTickers, setLayoutCandleData } =
+    useSearchStore();
 
   const [isChartReady, setChartReady] = useState(false);
 
@@ -1977,156 +1989,541 @@ export default function Chart({ width, height }: Props) {
 
   // todo all effects separated
   // changes the chart type between candles and line
+  // useEffect(() => {
+  //   const chart = chartRef.current;
+  //   if (!chart || !isChartReady || !ticker) return;
+  //   // !for mocking realtime with static data
+  //   // let intervalID: NodeJS.Timeout; // declare in effect scope
+
+  //   // Create main series if there is none initially or switch and set new one if chart type changes
+  //   if (!seriesRef.current || seriesTypeRef.current !== chartType) {
+  //     console.log(`creating new series`);
+  //     let oldSeries = seriesRef.current;
+
+  //     seriesRef.current =
+  //       chartType === "line"
+  //         ? chart.addSeries(LineSeries, { color: "#83ffe6" }, 0)
+  //         : chart.addSeries(
+  //             CandlestickSeries,
+  //             {
+  //               wickUpColor: "#83ffe6",
+  //               upColor: "#83ffe6",
+  //               wickDownColor: "#ff5f5f",
+  //               downColor: "#ff5f5f",
+  //             },
+  //             0
+  //           );
+  //     seriesTypeRef.current = chartType;
+  //     oldSeries && chart.removeSeries(oldSeries);
+  //   }
+
+  //   if (!volumeSeriesRef.current || seriesTypeRef.current !== chartType) {
+  //     console.log(`creating new volume series`);
+  //     let oldVolumeSeries = volumeSeriesRef.current;
+
+  //     volumeSeriesRef.current = chart.addSeries(
+  //       HistogramSeries,
+  //       {
+  //         color: "#26a69a",
+  //         priceFormat: { type: "volume" },
+  //         priceScaleId: "",
+  //       },
+  //       1
+  //     );
+
+  //     oldVolumeSeries && chart.removeSeries(oldVolumeSeries);
+  //   }
+
+  //   const mainSeriesData =
+  //     chartType === "line"
+  //       ? candleStickData.map((d: { time: number; close: number }) => ({
+  //           time: d.time,
+  //           value: d.close,
+  //         }))
+  //       : candleStickData;
+
+  //   const mockmainseriesdata =
+  //     chartType === "line"
+  //       ? priceData.slice(0, 50).map((d: { time: number; close: number }) => ({
+  //           time: d.time,
+  //           value: d.close,
+  //         }))
+  //       : priceData.slice(0, 50);
+
+  //   seriesRef.current.setData(mainSeriesData);
+  //   // seriesRef.current.setData(mockmainseriesdata);
+
+  //   // 🔻 Volume pane
+  //   const volumeData = candleStickData.map(
+  //     (d: { time: number; volume: number; close: number; open: number }) => ({
+  //       time: d.time,
+  //       value: d.volume,
+  //       color: d.close >= d.open ? "#c2b0ff" : "#fd0054",
+  //     })
+  //   );
+
+  //   volumeSeriesRef.current.setData(volumeData);
+  //   // volumeSeriesRef.current.setData(volumeDataSample.slice(0, 50));
+
+  //   // console.log("mainSeriesData sample:", mainSeriesData);
+  //   // console.log("🔎 Volume data sample:", volumeData);
+
+  //   chart.timeScale().fitContent();
+  // }, [chartType, ticker, isChartReady, candleStickData]);
+  // Grab the full LayoutTicker object for "iwm"
+
   useEffect(() => {
     const chart = chartRef.current;
     if (!chart || !isChartReady || !ticker) return;
-    // !for mocking realtime with static data
-    // let intervalID: NodeJS.Timeout; // declare in effect scope
+    if (isMainChart) {
+      // !for mocking realtime with static data
+      // let intervalID: NodeJS.Timeout; // declare in effect scope
 
-    // Create main series if there is none initially or switch and set new one if chart type changes
-    if (!seriesRef.current || seriesTypeRef.current !== chartType) {
-      console.log(`creating new series`);
-      let oldSeries = seriesRef.current;
+      // Create main series if there is none initially or switch and set new one if chart type changes
+      if (!seriesRef.current || seriesTypeRef.current !== chartType) {
+        console.log(`creating new series`);
+        let oldSeries = seriesRef.current;
 
-      seriesRef.current =
+        seriesRef.current =
+          chartType === "line"
+            ? chart.addSeries(LineSeries, { color: "#83ffe6" }, 0)
+            : chart.addSeries(
+                CandlestickSeries,
+                {
+                  wickUpColor: "#83ffe6",
+                  upColor: "#83ffe6",
+                  wickDownColor: "#ff5f5f",
+                  downColor: "#ff5f5f",
+                },
+                0
+              );
+        seriesTypeRef.current = chartType;
+        oldSeries && chart.removeSeries(oldSeries);
+      }
+
+      if (!volumeSeriesRef.current || seriesTypeRef.current !== chartType) {
+        console.log(`creating new volume series`);
+        let oldVolumeSeries = volumeSeriesRef.current;
+
+        volumeSeriesRef.current = chart.addSeries(
+          HistogramSeries,
+          {
+            color: "#26a69a",
+            priceFormat: { type: "volume" },
+            priceScaleId: "",
+          },
+          1
+        );
+
+        oldVolumeSeries && chart.removeSeries(oldVolumeSeries);
+      }
+
+      const mainSeriesData =
         chartType === "line"
-          ? chart.addSeries(LineSeries, { color: "#83ffe6" }, 0)
-          : chart.addSeries(
-              CandlestickSeries,
-              {
-                wickUpColor: "#83ffe6",
-                upColor: "#83ffe6",
-                wickDownColor: "#ff5f5f",
-                downColor: "#ff5f5f",
-              },
-              0
-            );
-      seriesTypeRef.current = chartType;
-      oldSeries && chart.removeSeries(oldSeries);
-    }
+          ? candleStickData.map((d: { time: number; close: number }) => ({
+              time: d.time,
+              value: d.close,
+            }))
+          : candleStickData;
 
-    if (!volumeSeriesRef.current || seriesTypeRef.current !== chartType) {
-      console.log(`creating new volume series`);
-      let oldVolumeSeries = volumeSeriesRef.current;
+      const mockmainseriesdata =
+        chartType === "line"
+          ? priceData
+              .slice(0, 50)
+              .map((d: { time: number; close: number }) => ({
+                time: d.time,
+                value: d.close,
+              }))
+          : priceData.slice(0, 50);
 
-      volumeSeriesRef.current = chart.addSeries(
-        HistogramSeries,
-        {
-          color: "#26a69a",
-          priceFormat: { type: "volume" },
-          priceScaleId: "",
-        },
-        1
+      seriesRef.current.setData(mainSeriesData);
+      // seriesRef.current.setData(mockmainseriesdata);
+
+      // 🔻 Volume pane
+      const volumeData = candleStickData.map(
+        (d: { time: number; volume: number; close: number; open: number }) => ({
+          time: d.time,
+          value: d.volume,
+          color: d.close >= d.open ? "#c2b0ff" : "#fd0054",
+        })
       );
 
-      oldVolumeSeries && chart.removeSeries(oldVolumeSeries);
+      volumeSeriesRef.current.setData(volumeData);
+      // volumeSeriesRef.current.setData(volumeDataSample.slice(0, 50));
+
+      // console.log("mainSeriesData sample:", mainSeriesData);
+      // console.log("🔎 Volume data sample:", volumeData);
+
+      chart.timeScale().fitContent();
+    } else {
+      // !for mocking realtime with static data
+      // let intervalID: NodeJS.Timeout; // declare in effect scope
+
+      // Create main series if there is none initially or switch and set new one if chart type changes
+      if (
+        !seriesRef.current ||
+        seriesTypeRef.current !== currentState?.chartType
+      ) {
+        console.log(`creating new series for other chart`);
+        let oldSeries = seriesRef.current;
+
+        seriesRef.current =
+          currentState?.chartType === "line"
+            ? chart.addSeries(LineSeries, { color: "#83ffe6" }, 0)
+            : chart.addSeries(
+                CandlestickSeries,
+                {
+                  wickUpColor: "#83ffe6",
+                  upColor: "#83ffe6",
+                  wickDownColor: "#ff5f5f",
+                  downColor: "#ff5f5f",
+                },
+                0
+              );
+        seriesTypeRef.current = currentState?.chartType!;
+        oldSeries && chart.removeSeries(oldSeries);
+      }
+
+      if (
+        !volumeSeriesRef.current ||
+        seriesTypeRef.current !== currentState?.chartType
+      ) {
+        console.log(`creating new volume series`);
+        let oldVolumeSeries = volumeSeriesRef.current;
+
+        volumeSeriesRef.current = chart.addSeries(
+          HistogramSeries,
+          {
+            color: "#26a69a",
+            priceFormat: { type: "volume" },
+            priceScaleId: "",
+          },
+          1
+        );
+
+        oldVolumeSeries && chart.removeSeries(oldVolumeSeries);
+      }
+
+      const mainSeriesData =
+        currentState?.chartType === "line"
+          ? currentState?.candleStickData.map(
+              (d: { time: number; close: number }) => ({
+                time: d.time,
+                value: d.close,
+              })
+            )
+          : currentState?.candleStickData;
+
+      const mockmainseriesdata =
+        currentState?.chartType === "line"
+          ? priceData
+              .slice(0, 50)
+              .map((d: { time: number; close: number }) => ({
+                time: d.time,
+                value: d.close,
+              }))
+          : priceData.slice(0, 50);
+
+      seriesRef.current.setData(mainSeriesData);
+      // seriesRef.current.setData(mockmainseriesdata);
+
+      // 🔻 Volume pane
+      const volumeData = currentState?.candleStickData.map(
+        (d: { time: number; volume: number; close: number; open: number }) => ({
+          time: d.time,
+          value: d.volume,
+          color: d.close >= d.open ? "#c2b0ff" : "#fd0054",
+        })
+      );
+
+      volumeSeriesRef.current.setData(volumeData);
+      // volumeSeriesRef.current.setData(volumeDataSample.slice(0, 50));
+
+      // console.log("mainSeriesData sample:", mainSeriesData);
+      // console.log("🔎 Volume data sample:", volumeData);
+
+      chart.timeScale().fitContent();
     }
+  }, [
+    chartType,
+    ticker,
+    isChartReady,
+    candleStickData,
+    currentState,
+  ]);
 
-    const mainSeriesData =
-      chartType === "line"
-        ? candleStickData.map((d: { time: number; close: number }) => ({
-            time: d.time,
-            value: d.close,
-          }))
-        : candleStickData;
+  //! fetches data to store in global state and for chart upon ticker changes and timeframe changes
+  // useEffect(() => {
+  //   console.log(`getting new data`);
+  //   const chart = chartRef.current;
+  //   if (!chart || !isChartReady || !ticker) return;
+  //   const fetchChartData = async () => {
+  //     try {
+  //       const { ticker, chartType, timeframe } = useChartStore.getState();
+  //       const res = await fetch(
+  //         `/api/alpaca/bars?ticker=${ticker}&timeframe=${timeframe}`
+  //       );
+  //       const raw = await res.json();
 
-    const mockmainseriesdata =
-      chartType === "line"
-        ? priceData.slice(0, 50).map((d: { time: number; close: number }) => ({
-            time: d.time,
-            value: d.close,
-          }))
-        : priceData.slice(0, 50);
+  //       const offset = new Date().getTimezoneOffset() * 60;
+  //       const data = raw
+  //         .map(
+  //           (d: {
+  //             time: string;
+  //             open: string;
+  //             high: string;
+  //             low: string;
+  //             close: string;
+  //             volume: string;
+  //           }) => ({
+  //             time: new Date(d.time).getTime() / 1000 - offset,
+  //             open: parseFloat(d.open),
+  //             high: parseFloat(d.high),
+  //             low: parseFloat(d.low),
+  //             close: parseFloat(d.close),
+  //             volume: parseFloat(d.volume),
+  //           })
+  //         )
+  //         .sort((a: { time: number }, b: { time: number }) => a.time - b.time);
+  //       // !later for real case set with real data not priceData
+  //       // setCandleStickData(priceData.slice(0, 50));
+  //       setCandleStickData(data);
+  //     } catch (err) {
+  //       console.error("[Fetch] Failed to fetch chart data:", err);
+  //     }
+  //   };
 
-    seriesRef.current.setData(mainSeriesData);
-    // seriesRef.current.setData(mockmainseriesdata);
-
-    // 🔻 Volume pane
-    const volumeData = candleStickData.map(
-      (d: { time: number; volume: number; close: number; open: number }) => ({
-        time: d.time,
-        value: d.volume,
-        color: d.close >= d.open ? "#c2b0ff" : "#fd0054",
-      })
-    );
-
-    volumeSeriesRef.current.setData(volumeData);
-    // volumeSeriesRef.current.setData(volumeDataSample.slice(0, 50));
-
-    // console.log("mainSeriesData sample:", mainSeriesData);
-    // console.log("🔎 Volume data sample:", volumeData);
-
-    chart.timeScale().fitContent();
-  }, [chartType, ticker, isChartReady, candleStickData]);
-
-  // fetches data to store in global state and for chart upon ticker changes and timeframe changes
+  //   fetchChartData();
+  // }, [ticker, isChartReady, timeframe]);
   useEffect(() => {
     console.log(`getting new data`);
     const chart = chartRef.current;
     if (!chart || !isChartReady || !ticker) return;
     const fetchChartData = async () => {
       try {
-        const { ticker, chartType, timeframe } = useChartStore.getState();
-        const res = await fetch(
-          `/api/alpaca/bars?ticker=${ticker}&timeframe=${timeframe}`
-        );
-        const raw = await res.json();
+        // const { ticker, chartType, timeframe } = useChartStore.getState();
+        const { timeframe } = useChartStore.getState();
+        if (isMainChart) {
+          const res = await fetch(
+            `/api/alpaca/bars?ticker=${currentTicker}&timeframe=${timeframe}`
+          );
+          const raw = await res.json();
 
-        const offset = new Date().getTimezoneOffset() * 60;
-        const data = raw
-          .map(
-            (d: {
-              time: string;
-              open: string;
-              high: string;
-              low: string;
-              close: string;
-              volume: string;
-            }) => ({
-              time: new Date(d.time).getTime() / 1000 - offset,
-              open: parseFloat(d.open),
-              high: parseFloat(d.high),
-              low: parseFloat(d.low),
-              close: parseFloat(d.close),
-              volume: parseFloat(d.volume),
-            })
-          )
-          .sort((a: { time: number }, b: { time: number }) => a.time - b.time);
-        // !later for real case set with real data not priceData
-        // setCandleStickData(priceData.slice(0, 50));
-        setCandleStickData(data);
+          const offset = new Date().getTimezoneOffset() * 60;
+          const data = raw
+            .map(
+              (d: {
+                time: string;
+                open: string;
+                high: string;
+                low: string;
+                close: string;
+                volume: string;
+              }) => ({
+                time: new Date(d.time).getTime() / 1000 - offset,
+                open: parseFloat(d.open),
+                high: parseFloat(d.high),
+                low: parseFloat(d.low),
+                close: parseFloat(d.close),
+                volume: parseFloat(d.volume),
+              })
+            )
+            .sort(
+              (a: { time: number }, b: { time: number }) => a.time - b.time
+            );
+          // !later for real case set with real data not priceData
+          // setCandleStickData(priceData.slice(0, 50));
+          setCandleStickData(data);
+        } else {
+          const { timeframe } = useChartStore.getState();
+
+          const res = await fetch(
+            `/api/alpaca/bars?ticker=${currentTicker}&timeframe=${currentState?.timeframe}`
+          );
+          const raw = await res.json();
+
+          const offset = new Date().getTimezoneOffset() * 60;
+          const data = raw
+            .map(
+              (d: {
+                time: string;
+                open: string;
+                high: string;
+                low: string;
+                close: string;
+                volume: string;
+              }) => ({
+                time: new Date(d.time).getTime() / 1000 - offset,
+                open: parseFloat(d.open),
+                high: parseFloat(d.high),
+                low: parseFloat(d.low),
+                close: parseFloat(d.close),
+                volume: parseFloat(d.volume),
+              })
+            )
+            .sort(
+              (a: { time: number }, b: { time: number }) => a.time - b.time
+            );
+          // !later for real case set with real data not priceData
+          // setCandleStickData(priceData.slice(0, 50));
+          setLayoutCandleData(currentTicker, data);
+          return;
+        }
       } catch (err) {
         console.error("[Fetch] Failed to fetch chart data:", err);
       }
     };
 
     fetchChartData();
-  }, [ticker, isChartReady, timeframe]);
+  }, [ticker, isChartReady, timeframe, currentState?.timeframe]);
 
-  // handles indicators
+  //! handles indicators
+  // useEffect(() => {
+  //   const chart = chartRef.current;
+  //   if (!chart || !isChartReady || !ticker) return;
+  //   // const closeSeries = normalizeCloseSeries(priceData.slice(0, 50));
+  //   const closeSeries = normalizeCloseSeries(candleStickData);
+
+  //   console.log(`panes: ${chart.panes()}`, chart.panes(), chart.panes().length);
+
+  //   addSelectedIndicators(
+  //     selectedIndicators,
+  //     closeSeries,
+  //     candleStickData,
+  //     addLine,
+  //     subPaneIndicators,
+  //     nextPaneIndexRef.current,
+  //     indicatorRefs
+  //   );
+
+  //   // Remove any unselected indicators
+  //   removeUnselectedIndicators(selectedIndicators, chart, indicatorRefs);
+  // }, [selectedIndicators, candleStickData, ticker, isChartReady]);
   useEffect(() => {
     const chart = chartRef.current;
     if (!chart || !isChartReady || !ticker) return;
-    // const closeSeries = normalizeCloseSeries(priceData.slice(0, 50));
-    const closeSeries = normalizeCloseSeries(candleStickData);
+    if (isMainChart) {
+      // const closeSeries = normalizeCloseSeries(priceData.slice(0, 50));
+      const closeSeries = normalizeCloseSeries(candleStickData);
 
-    console.log(`panes: ${chart.panes()}`, chart.panes(), chart.panes().length);
+      console.log(
+        `panes: ${chart.panes()}`,
+        chart.panes(),
+        chart.panes().length
+      );
 
-    addSelectedIndicators(
-      selectedIndicators,
-      closeSeries,
-      candleStickData,
-      addLine,
-      subPaneIndicators,
-      nextPaneIndexRef.current,
-      indicatorRefs
-    );
+      addSelectedIndicators(
+        selectedIndicators,
+        closeSeries,
+        candleStickData,
+        addLine,
+        subPaneIndicators,
+        nextPaneIndexRef.current,
+        indicatorRefs
+      );
 
-    // Remove any unselected indicators
-    removeUnselectedIndicators(selectedIndicators, chart, indicatorRefs);
-  }, [selectedIndicators, candleStickData, ticker, isChartReady]);
+      // Remove any unselected indicators
+      removeUnselectedIndicators(selectedIndicators, chart, indicatorRefs);
+    } else {
+      // const closeSeries = normalizeCloseSeries(priceData.slice(0, 50));
+      const closeSeries = normalizeCloseSeries(currentState?.candleStickData!);
 
-  // handles candlestick patterns
+      console.log(
+        `panes: ${chart.panes()}`,
+        chart.panes(),
+        chart.panes().length
+      );
+
+      addSelectedIndicators(
+        currentState?.selectedIndicators!,
+        closeSeries,
+        currentState?.candleStickData!,
+        addLine,
+        subPaneIndicators,
+        nextPaneIndexRef.current,
+        indicatorRefs
+      );
+
+      // Remove any unselected indicators
+      removeUnselectedIndicators(
+        currentState?.selectedIndicators!,
+        chart,
+        indicatorRefs
+      );
+    }
+  }, [
+    selectedIndicators,
+    candleStickData,
+    ticker,
+    isChartReady,
+    layoutTickers,
+  ]);
+
+  //! handles candlestick patterns
+  // useEffect(() => {
+  //   console.log("🔥 useEffect[patterns] triggered", {
+  //     selectedPatterns,
+  //     ticker,
+  //     isChartReady,
+  //     candleCount: candleStickData.length,
+  //   });
+
+  //   if (!chartRef.current || !seriesRef.current || !isChartReady || !ticker) {
+  //     console.warn("⚠️ Chart or series not ready");
+  //     return;
+  //   }
+
+  //   // 🔄 Remove all pattern markers first
+  //   if (overlayRefs.current["PatternMarkers"]) {
+  //     console.log("🧹 Clearing all pattern markers");
+  //     overlayRefs.current["PatternMarkers"].setMarkers([]);
+  //     delete overlayRefs.current["PatternMarkers"];
+  //   }
+
+  //   // ➕ Rebuild markers for all currently selected patterns
+  //   if (selectedPatterns.length > 0) {
+  //     console.log("🎯 Creating PatternMarkers primitive");
+  //     const primitive = createSeriesMarkers(seriesRef.current, []);
+
+  //     const candleData = candleStickData.map((c, i) => ({
+  //       open: c.open,
+  //       high: c.high,
+  //       low: c.low,
+  //       close: c.close,
+  //       volume: c.volume,
+  //       time: c.time,
+  //       index: i,
+  //     }));
+
+  //     const allMarkers: any[] = [];
+
+  //     selectedPatterns.forEach((pattern) => {
+  //       const detector = patternDetectors[pattern];
+  //       if (!detector) return;
+
+  //       const result = detector({ candles: candleData });
+  //       const matches = result
+  //         .map((flag, i) =>
+  //           flag ? { time: candleData[i].time, index: i } : null
+  //         )
+  //         .filter(Boolean);
+
+  //       matches.forEach((m) => {
+  //         allMarkers.push({
+  //           time: m!.time,
+  //           position: "aboveBar",
+  //           color: "purple",
+  //           shape: "circle",
+  //           text: pattern,
+  //         });
+  //       });
+  //     });
+
+  //     console.log("➕ Setting markers count=", allMarkers.length);
+  //     primitive.setMarkers(allMarkers);
+  //     overlayRefs.current["PatternMarkers"] = primitive;
+  //   }
+  // }, [selectedPatterns, candleStickData, ticker, isChartReady]);
   useEffect(() => {
     console.log("🔥 useEffect[patterns] triggered", {
       selectedPatterns,
@@ -2139,215 +2536,421 @@ export default function Chart({ width, height }: Props) {
       console.warn("⚠️ Chart or series not ready");
       return;
     }
+    if (isMainChart) {
+      // 🔄 Remove all pattern markers first
+      if (overlayRefs.current["PatternMarkers"]) {
+        console.log("🧹 Clearing all pattern markers");
+        overlayRefs.current["PatternMarkers"].setMarkers([]);
+        delete overlayRefs.current["PatternMarkers"];
+      }
 
-    // 🔄 Remove all pattern markers first
-    if (overlayRefs.current["PatternMarkers"]) {
-      console.log("🧹 Clearing all pattern markers");
-      overlayRefs.current["PatternMarkers"].setMarkers([]);
-      delete overlayRefs.current["PatternMarkers"];
-    }
+      // ➕ Rebuild markers for all currently selected patterns
+      if (selectedPatterns.length > 0) {
+        console.log("🎯 Creating PatternMarkers primitive");
+        const primitive = createSeriesMarkers(seriesRef.current, []);
 
-    // ➕ Rebuild markers for all currently selected patterns
-    if (selectedPatterns.length > 0) {
-      console.log("🎯 Creating PatternMarkers primitive");
-      const primitive = createSeriesMarkers(seriesRef.current, []);
+        const candleData = candleStickData.map((c, i) => ({
+          open: c.open,
+          high: c.high,
+          low: c.low,
+          close: c.close,
+          volume: c.volume,
+          time: c.time,
+          index: i,
+        }));
 
-      const candleData = candleStickData.map((c, i) => ({
-        open: c.open,
-        high: c.high,
-        low: c.low,
-        close: c.close,
-        volume: c.volume,
-        time: c.time,
-        index: i,
-      }));
+        const allMarkers: any[] = [];
 
-      const allMarkers: any[] = [];
+        selectedPatterns.forEach((pattern) => {
+          const detector = patternDetectors[pattern];
+          if (!detector) return;
 
-      selectedPatterns.forEach((pattern) => {
-        const detector = patternDetectors[pattern];
-        if (!detector) return;
+          const result = detector({ candles: candleData });
+          const matches = result
+            .map((flag, i) =>
+              flag ? { time: candleData[i].time, index: i } : null
+            )
+            .filter(Boolean);
 
-        const result = detector({ candles: candleData });
-        const matches = result
-          .map((flag, i) =>
-            flag ? { time: candleData[i].time, index: i } : null
-          )
-          .filter(Boolean);
-
-        matches.forEach((m) => {
-          allMarkers.push({
-            time: m!.time,
-            position: "aboveBar",
-            color: "purple",
-            shape: "circle",
-            text: pattern,
+          matches.forEach((m) => {
+            allMarkers.push({
+              time: m!.time,
+              position: "aboveBar",
+              color: "purple",
+              shape: "circle",
+              text: pattern,
+            });
           });
         });
-      });
 
-      console.log("➕ Setting markers count=", allMarkers.length);
-      primitive.setMarkers(allMarkers);
-      overlayRefs.current["PatternMarkers"] = primitive;
+        console.log("➕ Setting markers count=", allMarkers.length);
+        primitive.setMarkers(allMarkers);
+        overlayRefs.current["PatternMarkers"] = primitive;
+      }
+    } else {
+      // 🔄 Remove all pattern markers first
+      if (overlayRefs.current["PatternMarkers"]) {
+        console.log("🧹 Clearing all pattern markers");
+        overlayRefs.current["PatternMarkers"].setMarkers([]);
+        delete overlayRefs.current["PatternMarkers"];
+      }
+
+      // ➕ Rebuild markers for all currently selected patterns
+      if (currentState!.selectedPatterns.length > 0) {
+        console.log("🎯 Creating PatternMarkers primitive");
+        const primitive = createSeriesMarkers(seriesRef.current, []);
+
+        const candleData = currentState?.candleStickData.map((c, i) => ({
+          open: c.open,
+          high: c.high,
+          low: c.low,
+          close: c.close,
+          volume: c.volume,
+          time: c.time,
+          index: i,
+        }));
+
+        const allMarkers: any[] = [];
+
+        currentState!.selectedPatterns.forEach((pattern) => {
+          const detector = patternDetectors[pattern];
+          if (!detector) return;
+
+          const result = detector({ candles: candleData! });
+          const matches = result
+            .map((flag, i) =>
+              flag ? { time: candleData![i].time, index: i } : null
+            )
+            .filter(Boolean);
+
+          matches.forEach((m) => {
+            allMarkers.push({
+              time: m!.time,
+              position: "aboveBar",
+              color: "purple",
+              shape: "circle",
+              text: pattern,
+            });
+          });
+        });
+
+        console.log("➕ Setting markers count=", allMarkers.length);
+        primitive.setMarkers(allMarkers);
+        overlayRefs.current["PatternMarkers"] = primitive;
+      }
     }
-  }, [selectedPatterns, candleStickData, ticker, isChartReady]);
+  }, [selectedPatterns, candleStickData, ticker, isChartReady, layoutTickers]);
 
-  // --- Compare tickers effect
+  //! --- Compare tickers effect
+  // useEffect(() => {
+  //   const chart = chartRef.current;
+  //   if (!chart || !isChartReady) return;
+
+  //   // 🔄 Remove all compare series first
+  //   Object.keys(overlayRefs.current).forEach((key) => {
+  //     if (key.startsWith("compare-")) {
+  //       chart.removeSeries(overlayRefs.current[key]);
+  //       delete overlayRefs.current[key];
+  //     }
+  //   });
+
+  //   if (comparedTickers.length > 0) {
+  //     // 🔧 Switch right axis to percentage mode
+  //     chart.priceScale("right").applyOptions({
+  //       mode: PriceScaleMode.Percentage,
+  //     });
+  //   } else {
+  //     // 🔧 Reset back to nominal values if no compare tickers
+  //     chart.priceScale("right").applyOptions({
+  //       mode: PriceScaleMode.Normal,
+  //     });
+  //   }
+
+  //   // ➕ Re‑add all current compare tickers
+  //   comparedTickers.forEach(async (cmp) => {
+  //     try {
+  //       const { timeframe } = useChartStore.getState();
+  //       const res = await fetch(
+  //         `/api/alpaca/bars?ticker=${cmp}&timeframe=${timeframe}`
+  //       );
+  //       const raw = await res.json();
+
+  //       const offset = new Date().getTimezoneOffset() * 60;
+  //       const data = raw
+  //         .map((d: any) => ({
+  //           time: new Date(d.time).getTime() / 1000 - offset,
+  //           open: parseFloat(d.open),
+  //           high: parseFloat(d.high),
+  //           low: parseFloat(d.low),
+  //           close: parseFloat(d.close),
+  //           volume: parseFloat(d.volume),
+  //         }))
+  //         .sort((a: any, b: any) => a.time - b.time);
+
+  //       const series = addLine(
+  //         `compare-${cmp}`,
+  //         normalizeCloseSeries(data),
+  //         "#ff9900",
+  //         0
+  //       );
+  //       overlayRefs.current[`compare-${cmp}`] = series;
+  //     } catch (err) {
+  //       console.error(`[Fetch] Failed to fetch compare data for ${cmp}:`, err);
+  //     }
+  //   });
+  // }, [comparedTickers, isChartReady, candleStickData]);
+
   useEffect(() => {
     const chart = chartRef.current;
     if (!chart || !isChartReady) return;
+    if (isMainChart) {
+      // 🔄 Remove all compare series first
+      Object.keys(overlayRefs.current).forEach((key) => {
+        if (key.startsWith("compare-")) {
+          chart.removeSeries(overlayRefs.current[key]);
+          delete overlayRefs.current[key];
+        }
+      });
 
-    // 🔄 Remove all compare series first
-    Object.keys(overlayRefs.current).forEach((key) => {
-      if (key.startsWith("compare-")) {
-        chart.removeSeries(overlayRefs.current[key]);
-        delete overlayRefs.current[key];
+      if (comparedTickers.length > 0) {
+        // 🔧 Switch right axis to percentage mode
+        chart.priceScale("right").applyOptions({
+          mode: PriceScaleMode.Percentage,
+        });
+      } else {
+        // 🔧 Reset back to nominal values if no compare tickers
+        chart.priceScale("right").applyOptions({
+          mode: PriceScaleMode.Normal,
+        });
       }
-    });
 
-    if (comparedTickers.length > 0) {
-      // 🔧 Switch right axis to percentage mode
-      chart.priceScale("right").applyOptions({
-        mode: PriceScaleMode.Percentage,
+      // ➕ Re‑add all current compare tickers
+      comparedTickers.forEach(async (cmp) => {
+        try {
+          const { timeframe } = useChartStore.getState();
+          const res = await fetch(
+            `/api/alpaca/bars?ticker=${cmp}&timeframe=${timeframe}`
+          );
+          const raw = await res.json();
+
+          const offset = new Date().getTimezoneOffset() * 60;
+          const data = raw
+            .map((d: any) => ({
+              time: new Date(d.time).getTime() / 1000 - offset,
+              open: parseFloat(d.open),
+              high: parseFloat(d.high),
+              low: parseFloat(d.low),
+              close: parseFloat(d.close),
+              volume: parseFloat(d.volume),
+            }))
+            .sort((a: any, b: any) => a.time - b.time);
+
+          const series = addLine(
+            `compare-${cmp}`,
+            normalizeCloseSeries(data),
+            "#ff9900",
+            0
+          );
+          overlayRefs.current[`compare-${cmp}`] = series;
+        } catch (err) {
+          console.error(
+            `[Fetch] Failed to fetch compare data for ${cmp}:`,
+            err
+          );
+        }
       });
     } else {
-      // 🔧 Reset back to nominal values if no compare tickers
-      chart.priceScale("right").applyOptions({
-        mode: PriceScaleMode.Normal,
+      // 🔄 Remove all compare series first
+      Object.keys(overlayRefs.current).forEach((key) => {
+        if (key.startsWith("compare-")) {
+          chart.removeSeries(overlayRefs.current[key]);
+          delete overlayRefs.current[key];
+        }
+      });
+
+      if (currentState!.compareTickers.length > 0) {
+        // 🔧 Switch right axis to percentage mode
+        chart.priceScale("right").applyOptions({
+          mode: PriceScaleMode.Percentage,
+        });
+      } else {
+        // 🔧 Reset back to nominal values if no compare tickers
+        chart.priceScale("right").applyOptions({
+          mode: PriceScaleMode.Normal,
+        });
+      }
+
+      // ➕ Re‑add all current compare tickers
+      currentState!.compareTickers.forEach(async (cmp) => {
+        try {
+          const { timeframe } = useChartStore.getState();
+          const res = await fetch(
+            `/api/alpaca/bars?ticker=${cmp}&timeframe=${timeframe}`
+          );
+          const raw = await res.json();
+
+          const offset = new Date().getTimezoneOffset() * 60;
+          const data = raw
+            .map((d: any) => ({
+              time: new Date(d.time).getTime() / 1000 - offset,
+              open: parseFloat(d.open),
+              high: parseFloat(d.high),
+              low: parseFloat(d.low),
+              close: parseFloat(d.close),
+              volume: parseFloat(d.volume),
+            }))
+            .sort((a: any, b: any) => a.time - b.time);
+
+          const series = addLine(
+            `compare-${cmp}`,
+            normalizeCloseSeries(data),
+            "#ff9900",
+            0
+          );
+          overlayRefs.current[`compare-${cmp}`] = series;
+        } catch (err) {
+          console.error(
+            `[Fetch] Failed to fetch compare data for ${cmp}:`,
+            err
+          );
+        }
       });
     }
-
-    // ➕ Re‑add all current compare tickers
-    comparedTickers.forEach(async (cmp) => {
-      try {
-        const { timeframe } = useChartStore.getState();
-        const res = await fetch(
-          `/api/alpaca/bars?ticker=${cmp}&timeframe=${timeframe}`
-        );
-        const raw = await res.json();
-
-        const offset = new Date().getTimezoneOffset() * 60;
-        const data = raw
-          .map((d: any) => ({
-            time: new Date(d.time).getTime() / 1000 - offset,
-            open: parseFloat(d.open),
-            high: parseFloat(d.high),
-            low: parseFloat(d.low),
-            close: parseFloat(d.close),
-            volume: parseFloat(d.volume),
-          }))
-          .sort((a: any, b: any) => a.time - b.time);
-
-        const series = addLine(
-          `compare-${cmp}`,
-          normalizeCloseSeries(data),
-          "#ff9900",
-          0
-        );
-        overlayRefs.current[`compare-${cmp}`] = series;
-      } catch (err) {
-        console.error(`[Fetch] Failed to fetch compare data for ${cmp}:`, err);
-      }
-    });
-  }, [comparedTickers, isChartReady, candleStickData]);
-
-  // --- Layout tickers effect
-  useEffect(() => {
-    const chart = chartRef.current;
-    if (!chart || !isChartReady) return;
-
-    // 🔄 Remove all layout series first
-    Object.keys(overlayRefs.current).forEach((key) => {
-      if (key.startsWith("layout-")) {
-        chart.removeSeries(overlayRefs.current[key]);
-        delete overlayRefs.current[key];
-      }
-    });
-
-    // ➕ Re-add all current layout tickers
-    layoutTickers.forEach(async (lt) => {
-      try {
-        const { timeframe } = useChartStore.getState();
-        const res = await fetch(
-          `/api/alpaca/bars?ticker=${lt.ticker}&timeframe=${timeframe}`
-        );
-        const raw = await res.json();
-
-        const offset = new Date().getTimezoneOffset() * 60;
-        const data = raw
-          .map((d: any) => ({
-            time: new Date(d.time).getTime() / 1000 - offset,
-            open: parseFloat(d.open),
-            high: parseFloat(d.high),
-            low: parseFloat(d.low),
-            close: parseFloat(d.close),
-            volume: parseFloat(d.volume),
-          }))
-          .sort((a: any, b: any) => a.time - b.time);
-
-        const key = `layout-${lt.ticker}-${lt.dir}`;
-        const series = addLine(
-          key,
-          normalizeCloseSeries(data),
-          lt.dir === "right" ? "#00ccff" : "#ff00cc",
-          0
-        );
-
-        // Track the series for future cleanup
-        overlayRefs.current[key] = series;
-      } catch (err) {
-        console.error(
-          `[Fetch] Failed to fetch layout data for ${lt.ticker}:`,
-          err
-        );
-      }
-    });
-  }, [layoutTickers, isChartReady]);
+  }, [comparedTickers, isChartReady, candleStickData, layoutTickers]);
 
   //todo tmrw need to delete old ml overlays if one of the dependencies changes otherwise they just add up handles effects for ml inference
+  // useEffect(() => {
+  //   const chart = chartRef.current;
+  //   if (!chart || !isChartReady || !ticker) return;
+
+  //   // Cleanup overlays when showTrends is false
+  //   if (
+  //     !showTrends ||
+  //     prevTickerRef.current !== ticker ||
+  //     prevDataRef.current !== candleStickData ||
+  //     prevTimeframeRef.current !== timeframe
+  //   ) {
+  //     Object.keys(overlayRefs.current)
+  //       .filter((key) => key.startsWith("ML Dashed") || key === "MLMarkers")
+  //       .forEach((key) => {
+  //         const overlay = overlayRefs.current[key];
+
+  //         if (overlay && typeof overlay.setData === "function") {
+  //           chart.removeSeries(overlay); // remove dashed line series
+  //         } else if (overlay && typeof overlay.setMarkers === "function") {
+  //           overlay.setMarkers([]); // clear markers
+  //         }
+
+  //         delete overlayRefs.current[key];
+  //       });
+
+  //     // Update refs to current values
+  //     prevTickerRef.current = ticker;
+  //     prevDataRef.current = candleStickData;
+  //     prevTimeframeRef.current = timeframe;
+  //   }
+
+  //   runMLPredictionOverlay(
+  //     candleStickData, // or priceData.slice(0, currentIndexRef.current + 1)
+  //     // priceData.slice(0, 50), // or priceData.slice(0, currentIndexRef.current + 1)
+  //     ticker,
+  //     model,
+  //     scaler,
+  //     labels,
+  //     showTrends,
+  //     overlayRefs,
+  //     updateMLOverlays
+  //   );
+  // }, [showTrends, ticker, timeframe, candleStickData]);
   useEffect(() => {
     const chart = chartRef.current;
     if (!chart || !isChartReady || !ticker) return;
+    if (isMainChart) {
+      // Cleanup overlays when showTrends is false
+      if (
+        !showTrends ||
+        prevTickerRef.current !== ticker ||
+        prevDataRef.current !== candleStickData ||
+        prevTimeframeRef.current !== timeframe
+      ) {
+        Object.keys(overlayRefs.current)
+          .filter((key) => key.startsWith("ML Dashed") || key === "MLMarkers")
+          .forEach((key) => {
+            const overlay = overlayRefs.current[key];
 
-    // Cleanup overlays when showTrends is false
-    if (
-      !showTrends ||
-      prevTickerRef.current !== ticker ||
-      prevDataRef.current !== candleStickData ||
-      prevTimeframeRef.current !== timeframe
-    ) {
-      Object.keys(overlayRefs.current)
-        .filter((key) => key.startsWith("ML Dashed") || key === "MLMarkers")
-        .forEach((key) => {
-          const overlay = overlayRefs.current[key];
+            if (overlay && typeof overlay.setData === "function") {
+              chart.removeSeries(overlay); // remove dashed line series
+            } else if (overlay && typeof overlay.setMarkers === "function") {
+              overlay.setMarkers([]); // clear markers
+            }
 
-          if (overlay && typeof overlay.setData === "function") {
-            chart.removeSeries(overlay); // remove dashed line series
-          } else if (overlay && typeof overlay.setMarkers === "function") {
-            overlay.setMarkers([]); // clear markers
-          }
+            delete overlayRefs.current[key];
+          });
 
-          delete overlayRefs.current[key];
-        });
+        // Update refs to current values
+        prevTickerRef.current = ticker;
+        prevDataRef.current = candleStickData;
+        prevTimeframeRef.current = timeframe;
+      }
 
-      // Update refs to current values
-      prevTickerRef.current = ticker;
-      prevDataRef.current = candleStickData;
-      prevTimeframeRef.current = timeframe;
+      runMLPredictionOverlay(
+        candleStickData, // or priceData.slice(0, currentIndexRef.current + 1)
+        // priceData.slice(0, 50), // or priceData.slice(0, currentIndexRef.current + 1)
+        ticker,
+        model,
+        scaler,
+        labels,
+        showTrends,
+        overlayRefs,
+        updateMLOverlays
+      );
+    } else {
+      // Cleanup overlays when showTrends is false
+      if (
+        !currentState?.showTrends ||
+        prevTickerRef.current !== currentState?.ticker ||
+        prevDataRef.current !== currentState?.candleStickData ||
+        prevTimeframeRef.current !== currentState?.timeframe
+      ) {
+        Object.keys(overlayRefs.current)
+          .filter((key) => key.startsWith("ML Dashed") || key === "MLMarkers")
+          .forEach((key) => {
+            const overlay = overlayRefs.current[key];
+
+            if (overlay && typeof overlay.setData === "function") {
+              chart.removeSeries(overlay); // remove dashed line series
+            } else if (overlay && typeof overlay.setMarkers === "function") {
+              overlay.setMarkers([]); // clear markers
+            }
+
+            delete overlayRefs.current[key];
+          });
+
+        // Update refs to current values
+        prevTickerRef.current = currentState?.ticker!;
+        prevDataRef.current = currentState?.candleStickData!;
+        prevTimeframeRef.current = currentState?.timeframe!;
+      }
+
+      runMLPredictionOverlay(
+        currentState?.candleStickData!, // or priceData.slice(0, currentIndexRef.current + 1)
+        // priceData.slice(0, 50), // or priceData.slice(0, currentIndexRef.current + 1)
+        currentState?.ticker!,
+        model,
+        scaler,
+        labels,
+        currentState?.showTrends!,
+        overlayRefs,
+        updateMLOverlays
+      );
     }
-
-    runMLPredictionOverlay(
-      candleStickData, // or priceData.slice(0, currentIndexRef.current + 1)
-      // priceData.slice(0, 50), // or priceData.slice(0, currentIndexRef.current + 1)
-      ticker,
-      model,
-      scaler,
-      labels,
-      showTrends,
-      overlayRefs,
-      updateMLOverlays
-    );
-  }, [showTrends, ticker, timeframe, candleStickData]);
+  }, [
+    showTrends,
+    ticker,
+    timeframe,
+    candleStickData,
+    currentState?.showTrends,
+  ]);
 
   // ! separate effects end
 

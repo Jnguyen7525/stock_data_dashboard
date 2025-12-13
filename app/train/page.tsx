@@ -121,7 +121,7 @@ export default function TrainPage() {
   }
 
   return (
-    <div className="bg-[#1e1e1e] text-white max-w-screen min-h-screen flex flex-col overflow-x-hidden">
+    <div className="bg-[#1e1e1e] text-white max-w-screen min-h-screen flex flex-col w-full h-full overflow-x-hidden">
       <Header />
       <div className="flex flex-col w-full h-full items-start justify-start p-6 gap-8 overflow-x-hidden">
         <h1 className="text-3xl font-bold">Training</h1>

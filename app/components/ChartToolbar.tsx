@@ -315,7 +315,6 @@ export default function ChartToolbar({
                       key={`${t.ticker}-${i}`}
                       className="px-2 py-1 hover:opacity-50 cursor-pointer"
                       onClick={() => {
-                        // setTicker(t.ticker);
                         changeTicker(t.ticker);
                         setOpenDropdown(null);
                         setSearchCompare(""); // reset search
@@ -344,7 +343,6 @@ export default function ChartToolbar({
                   key={ml}
                   className="px-3 py-2 w-fit hover:opacity-50 cursor-pointer"
                   onClick={() => {
-                    // setShowTrends();
                     toogleTrends();
                     setOpenDropdown(null);
                   }}
@@ -565,7 +563,6 @@ export default function ChartToolbar({
                   key={tf}
                   className="px-3 py-2 hover:opacity-50  cursor-pointer"
                   onClick={() => {
-                    // setTimeframe(tf as Timeframe);
                     setChartTime(tf);
                     setOpenDropdown(null);
                   }}
@@ -590,7 +587,6 @@ export default function ChartToolbar({
               <li
                 className="px-3 py-2 hover:opacity-50  cursor-pointer"
                 onClick={() => {
-                  // setChartType("line");
                   setCurrentChartType("line");
                   setOpenDropdown(null);
                 }}
@@ -600,7 +596,6 @@ export default function ChartToolbar({
               <li
                 className="px-3 py-2 hover:opacity-50  cursor-pointer"
                 onClick={() => {
-                  // setChartType("candlestick");
                   setCurrentChartType("candlestick");
                   setOpenDropdown(null);
                 }}
